@@ -525,7 +525,7 @@
 
         /* Input Area */
         .input-area {
-            padding: 2rem;
+            padding: 1.5rem 2rem;
             background: rgba(5, 8, 20, 0.95);
             backdrop-filter: blur(10px);
             border-top: 3px solid #00ffff;
@@ -534,6 +534,9 @@
                 inset 0 4px 20px rgba(0, 255, 255, 0.1);
             z-index: 100;
             position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .input-area::before {
@@ -555,6 +558,7 @@
 
         .input-field {
             width: 100%;
+            max-width: 800px;
             font-size: 1.6rem;
             padding: 1.25rem 1.5rem;
             border: 3px solid rgba(0, 255, 255, 0.7);
@@ -569,6 +573,7 @@
             text-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
             animation: inputGlow 2s ease-in-out infinite;
             position: relative;
+            margin: 0 auto;
         }
 
         @keyframes inputGlow {
