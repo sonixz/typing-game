@@ -1,13 +1,6 @@
 {
-  "routes": [
-    {
-      "route": "/",
-      "redirect": "/typing-war.html",
-      "statusCode": 301
-    }
-  ],
   "navigationFallback": {
-    "rewrite": "/typing-war.html",
+    "rewrite": "/index.html",
     "exclude": ["/words.json"]
   },
   "mimeTypes": {
@@ -19,7 +12,7 @@
   },
   "responseOverrides": {
     "404": {
-      "rewrite": "/typing-war.html",
+      "rewrite": "/index.html",
       "statusCode": 200
     }
   }
