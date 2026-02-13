@@ -1456,6 +1456,10 @@
                 <div class="hud-label">Combo</div>
                 <div class="hud-value hud-combo" id="combo">0x</div>
             </div>
+            <div class="hud-item">
+                <div class="hud-label">Time</div>
+                <div class="hud-value" id="timer">0:00</div>
+            </div>
         </div>
 
         <!-- Arena -->
@@ -1599,6 +1603,10 @@
             wordStartTime: null,
             currentWordWPM: 0,
 
+            // Timer
+            gameStartTime: null,
+            gameTime: 0,
+
             // Shop navigation
             shopSelectedIndex: 0
         };
@@ -1729,6 +1737,10 @@
             state.wordStartTime = null;
             state.currentWordWPM = 0;
 
+            // Reset timer
+            state.gameStartTime = Date.now();
+            state.gameTime = 0;
+
             // Clear arena
             const enemies = document.querySelectorAll('.enemy');
             enemies.forEach(e => e.remove());
@@ -1763,9 +1775,9 @@
                 elements.waveAnnounce.classList.remove('show');
             }, 2000);
 
-            // Spawn enemies
-            const enemyCount = 3 + waveNum * 2;
-            const spawnDelay = Math.max(800, 2000 - waveNum * 50);
+            // Spawn enemies - Arcade style: more enemies, faster spawn
+            const enemyCount = 5 + waveNum * 2;
+            const spawnDelay = Math.max(600, 1800 - waveNum * 60);
 
             for (let i = 0; i < enemyCount; i++) {
                 setTimeout(() => {
@@ -1785,7 +1797,7 @@
             let type = 'normal';
             let word = '';
             let hp = 1;
-            let speed = 0.5;
+            let speed = 0.9;
             let goldValue = 10;
 
             const rand = Math.random();
@@ -1794,13 +1806,13 @@
                 type = 'tank';
                 word = wordPools.hard[Math.floor(Math.random() * wordPools.hard.length)];
                 hp = 3;
-                speed = 0.45;
+                speed = 0.6;
                 goldValue = 30;
             } else if (waveNum >= 3 && rand < 0.4) {
                 type = 'fast';
                 word = wordPools.medium[Math.floor(Math.random() * wordPools.medium.length)];
                 hp = 1;
-                speed = 1.1;
+                speed = 1.4;
                 goldValue = 15;
             } else {
                 type = 'normal';
@@ -1810,9 +1822,13 @@
                     word = wordPools.easy[Math.floor(Math.random() * wordPools.easy.length)];
                 }
                 hp = 1;
-                speed = 0.7;
+                speed = 0.9;
                 goldValue = 10;
             }
+
+            // ARCADE SCALING: Aggressive speed increase per wave
+            const waveScaling = 1 + (waveNum * 0.12);
+            speed *= waveScaling;
 
             // Apply slow upgrade
             speed *= state.slowMultiplier;
@@ -1857,6 +1873,14 @@
 
         function gameLoop() {
             if (!state.isPlaying) return;
+
+            // Update timer
+            if (state.gameStartTime) {
+                state.gameTime = Math.floor((Date.now() - state.gameStartTime) / 1000);
+                const minutes = Math.floor(state.gameTime / 60);
+                const seconds = state.gameTime % 60;
+                document.getElementById('timer').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            }
 
             // Move enemies
             state.enemies.forEach(enemy => {
