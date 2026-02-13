@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(git add:*)",
-      "Bash(git commit -m \"$\\(cat <<''EOF''\nInitial commit - Typing War v0.1.0\n\nCore game features:\n- Wave-based typing defense gameplay\n- 3 enemy types \\(Normal, Fast, Tank\\)\n- 4 word difficulty tiers with extensive word pools\n- Combo system with perfect kill mechanics\n- WPM-based damage multipliers\n- Speed tier system \\(Lightning/Blazing/God-like\\)\n- Shop system with 3 upgrades \\(HP, Gold multiplier, Heal\\)\n- Cyberpunk UI with neon aesthetics and animations\n- Game loop with wave progression\n- Game over screen with stats\n\nTechnical stack:\n- Single-file HTML architecture\n- Vanilla JavaScript\n- Pure CSS animations\n- No dependencies\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nInitial commit - Typing War v0.1.0\n\nCore game features:\n- Wave-based typing defense gameplay\n- 3 enemy types \\(Normal, Fast, Tank\\)\n- 4 word difficulty tiers with extensive word pools\n- Combo system with perfect kill mechanics\n- WPM-based damage multipliers\n- Speed tier system \\(Lightning/Blazing/God-like\\)\n- Shop system with 3 upgrades \\(HP, Gold multiplier, Heal\\)\n- Cyberpunk UI with neon aesthetics and animations\n- Game loop with wave progression\n- Game over screen with stats\n\nTechnical stack:\n- Single-file HTML architecture\n- Vanilla JavaScript\n- Pure CSS animations\n- No dependencies\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nAdd development context file for Claude Code sessions\n\n- Establish development guidelines and workflow\n- Document current project state and architecture\n- Define roadmap priorities\n- Set language conventions \\(French for user, English for code/docs\\)\n- Create session workflow template\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git commit:*)"
     ]
   }
 }
