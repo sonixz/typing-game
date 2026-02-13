@@ -1626,19 +1626,39 @@
 
         let wordsLoaded = false;
 
+        // Utility: Get random subset of array
+        function getRandomSubset(array, count) {
+            const shuffled = [...array].sort(() => Math.random() - 0.5);
+            return shuffled.slice(0, Math.min(count, array.length));
+        }
+
+        // Select random subset from word pools for variety
+        function selectRandomWordPool(fullPool) {
+            return {
+                easy: getRandomSubset(fullPool.easy, Math.floor(fullPool.easy.length * 0.45)),
+                medium: getRandomSubset(fullPool.medium, Math.floor(fullPool.medium.length * 0.45)),
+                hard: getRandomSubset(fullPool.hard, Math.floor(fullPool.hard.length * 0.45)),
+                boss: getRandomSubset(fullPool.boss, Math.floor(fullPool.boss.length * 0.5))
+            };
+        }
+
         // Load words from JSON file
         async function loadWords() {
             const statusEl = document.getElementById('wordStatus');
             try {
-                if (statusEl) statusEl.textContent = 'Loading words from JSON...';
+                if (statusEl) statusEl.textContent = 'Loading words...';
                 const response = await fetch('words.json');
                 if (response.ok) {
                     const data = await response.json();
-                    wordPools = data;
+                    const fullPoolSize = Object.values(data).flat().length;
+
+                    // Select random subset for variety
+                    wordPools = selectRandomWordPool(data);
+
                     wordsLoaded = true;
-                    const totalWords = Object.values(data).flat().length;
-                    console.log('✓ Loaded', totalWords, 'words from JSON');
-                    if (statusEl) statusEl.textContent = `✓ ${totalWords} words loaded from JSON`;
+                    const selectedWords = Object.values(wordPools).flat().length;
+                    console.log(`✓ Selected ${selectedWords} words from pool of ${fullPoolSize}`);
+                    if (statusEl) statusEl.textContent = `✓ ${selectedWords} words loaded`;
                     if (statusEl) statusEl.style.color = '#00ffff';
                     return true;
                 } else {
@@ -1653,10 +1673,14 @@
                 if (embeddedWords) {
                     try {
                         const data = JSON.parse(embeddedWords.textContent);
-                        wordPools = data;
-                        const totalWords = Object.values(data).flat().length;
-                        console.log('✓ Loaded', totalWords, 'words from embedded data');
-                        if (statusEl) statusEl.textContent = `✓ ${totalWords} words loaded (embedded)`;
+                        const fullPoolSize = Object.values(data).flat().length;
+
+                        // Select random subset for variety
+                        wordPools = selectRandomWordPool(data);
+
+                        const selectedWords = Object.values(wordPools).flat().length;
+                        console.log(`✓ Selected ${selectedWords} words from pool of ${fullPoolSize}`);
+                        if (statusEl) statusEl.textContent = `✓ ${selectedWords} words loaded`;
                         if (statusEl) statusEl.style.color = '#00ffff';
                         wordsLoaded = true;
                         return true;
