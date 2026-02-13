@@ -12,7 +12,9 @@
 ## ✨ Features
 - **Wave-based gameplay**: Progressive difficulty with enemy waves
 - **3 Enemy types**: Normal, Fast, and Tank enemies
-- **Dynamic word difficulty**: Easy, Medium, Hard, and Boss word pools
+- **Dynamic word difficulty**: 5,000+ word pool with random subset loading
+  - Each game session loads ~2,200 different words for variety
+  - Tech/gaming vocabulary mixed with common English words
 - **Combat system**:
   - Real-time WPM calculation
   - Combo multipliers for consecutive perfect kills
@@ -64,10 +66,11 @@ No build process, no dependencies. Pure vanilla HTML/CSS/JS.
 - [ ] Mobile support
 
 ### Phase 4: Distribution
+- [x] Open source release (MIT License)
+- [x] Deploy to Azure Static Web Apps
 - [ ] Deploy to itch.io
 - [ ] Deploy to GitHub Pages
 - [ ] Polish game page with screenshots/GIFs
-- [ ] Open source release
 
 ## 📦 Project Structure
 
@@ -123,7 +126,9 @@ This project is licensed under the MIT License - see the [LICENSE](./LICENSE) fi
 ## 📊 Stats
 
 - **Lines of Code**: ~2900+ (single file!)
-- **Word Pool**: 1000+ words across 4 difficulty tiers
+- **Word Pool**: 5,000+ words across 4 difficulty tiers
+  - Random subset loaded each session for variety (~2,200+ words per game)
+  - Tech/gaming vocabulary + common English + themed categories
 - **Dependencies**: 0 (pure vanilla)
 - **Frameworks**: 0 (just HTML/CSS/JS)
 

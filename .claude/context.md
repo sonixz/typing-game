@@ -1,7 +1,7 @@
-# Claude Code - Typing War Context
+# Claude Code - Typing Lab Context
 
 ## Project Overview
-**Typing War** - A cyberpunk-themed typing defense game built with pure HTML/CSS/JS.
+**Typing Lab** (formerly "Typing War") - A neon-styled typing defense game built with pure HTML/CSS/JS. Open source (MIT License) and deployed at [typinglab.io](https://typinglab.io).
 
 ## Development Guidelines
 
@@ -28,36 +28,49 @@
 - Test in Chrome/Firefox
 - Check responsiveness as features are added
 
-## Current State (v0.1.0)
+## Current State (v0.2.0+)
 
 ### Implemented Features
 - Core typing mechanics with real-time input handling
-- Wave system with progressive difficulty
-- 3 enemy types: Normal, Fast, Tank
-- 4 word difficulty tiers (easy/medium/hard/boss)
+- Wave system with **arcade-style progressive difficulty** (12% speed increase per wave)
+- **Game timer** showing elapsed time in MM:SS format
+- 3 enemy types: Normal (0.9 base speed), Fast (1.4 base speed), Tank (0.6 base speed)
+- **5,000+ word pool** with random subset loading (~2,200 words per session)
+  - Tech/gaming vocabulary (500+ terms)
+  - Common English words (2000+ nouns, 1000+ verbs/adjectives)
+  - Themed categories (science, space, nature)
+  - Distribution: 980 easy, 2018 medium, 1488 hard, 537 boss words
 - Combo system for consecutive perfect kills
 - WPM calculation and speed-based damage multipliers
 - Speed tier announcements (Lightning 60+, Blazing 80+, God-like 100+ WPM)
-- Shop system between waves (3 upgrades)
-- HUD with health, gold, score, combo display
-- Game over screen
-- Cyberpunk UI with animations (scanlines, glitch, glow effects)
+- Shop system between waves with **balanced economy** (reduced gold, higher upgrade costs)
+- HUD with health, gold, score, combo, and **timer** display
+- Game over screen with final stats
+- Neon-styled UI with animations (scanlines, glitch, glow effects)
+- **Footer navigation** with GitHub repo, Discord (coming soon), Leaderboards (coming soon) links
+- **Favicon** (neon "T" logo)
 
 ### Architecture Notes
-- Main file: `typing-war.html` (~2900 lines)
-- Word pools: `words.json` (357 lines)
-- State management: Single `state` object
-- Game loop: requestAnimationFrame-based
-- Enemy spawning: Random positioning with collision avoidance
+- Main file: `index.html` (~2900 lines, single-file architecture)
+- Word pools: `words.json` (5,023 words, 76KB)
+  - **Random subset loading**: Each session loads 45-50% of total pool using Fisher-Yates shuffle
+  - Status message shows: "X random words loaded"
+- State management: Single `state` object with timer tracking
+- Game loop: requestAnimationFrame-based with timer updates
+- Enemy spawning: Random positioning with collision avoidance, **spawn at y: -100** to prevent word cutoff
 
 ### Known Technical Details
-- Enemies fall at speed: `0.3 * (1 + waveNum * 0.05)` px/frame
-- Fast enemies: 2x speed, less HP
-- Tank enemies: 0.5x speed, more HP
+- **Arcade difficulty scaling**: Base speed × (1 + waveNum × 0.12)
+- Enemy base speeds: Normal 0.9, Fast 1.4, Tank 0.6 (increased ~30-40% from original)
+- Enemy counts per wave: 5 + waveNum × 2 (increased from 3 + waveNum × 2)
+- **Economy balance** (tightened ~40-50%):
+  - Gold per enemy: Normal 6, Fast 9, Tank 18 (reduced from 10/15/30)
+  - Upgrade costs: Damage 75+40×level, Slow 100+50×level, Heal 50, Gold multiplier 90+30×level
 - Perfect kill: No mistakes in word typing
 - Combo breaks: After 3 seconds of no perfect kills
 - Base HP: 100 (upgradeable)
 - Starting gold: 50
+- Timer starts when game begins, displayed in MM:SS format
 
 ## Development Roadmap
 
@@ -89,9 +102,14 @@
    - Stats tracking (highest wave, highest combo, etc.)
 
 ### Future Phases
-- Phase 2: Boss waves, new enemy types, achievements
-- Phase 3: Endless mode, daily challenges, stats dashboard
-- Phase 4: Deploy to itch.io and GitHub Pages
+- Phase 2: Boss waves, new enemy types, achievements, themes/skins
+- Phase 3: Endless mode, daily challenges, stats dashboard, mobile support
+- Phase 4: Distribution
+  - ✅ Open source release (MIT License)
+  - ✅ Deploy to Azure Static Web Apps
+  - ⏳ Deploy to itch.io
+  - ⏳ Deploy to GitHub Pages (alternative)
+  - ⏳ Polish game page with screenshots/GIFs
 
 ## Session Workflow
 
@@ -113,26 +131,61 @@
 ```
 typing-game/
 ├── .claude/
-│   ├── context.md           # This file
-│   └── settings.local.json  # Claude Code settings
+│   ├── context.md              # This file - development context
+│   └── settings.local.json     # Claude Code settings
+├── .github/
+│   └── workflows/
+│       └── azure-static-web-apps-*.yml  # GitHub Actions CI/CD
 ├── .gitignore
-├── CHANGELOG.md
-├── README.md
-├── typing-war.html          # Main game file
-└── words.json               # Word pools
+├── CHANGELOG.md                # Version history
+├── CONTRIBUTING.md             # Contribution guidelines
+├── DEPLOY.md                   # Deployment guide
+├── LICENSE                     # MIT License
+├── README.md                   # Project documentation
+├── index.html                  # Main game file (~2900 lines)
+├── staticwebapp.config.json    # Azure Static Web Apps config
+└── words.json                  # Word pool (5,023 words, 76KB)
 ```
 
+### Note on Python Scripts
+- `generate_words.py` and `enrich_words_mega.py` exist **locally only** (in .gitignore)
+- Used for word pool generation/enrichment
+- Not deployed (caused Azure build failures)
+
 ## Useful Commands
-- Test game: Open `typing-war.html` in browser
+- Test game: Open `index.html` in browser
 - Check git: `git status`, `git log --oneline`
-- Line count: `wc -l typing-war.html`
+- Line count: `wc -l index.html`
+- Word pool stats: `python3 -c "import json; data = json.load(open('words.json')); print(f'Total: {sum(len(v) for v in data.values())}')"`
+- Check deployment: Visit [typinglab.io](https://typinglab.io)
+
+## Deployment
+- **Platform**: Azure Static Web Apps
+- **CI/CD**: GitHub Actions (auto-deploy on push to main)
+- **Build**: No build process needed (pure static HTML/CSS/JS)
+- **Config**: `staticwebapp.config.json` handles routing
+- **Important**: Python scripts excluded from deployment (.gitignore) to prevent build errors
 
 ## Notes
 - User prefers conversational French communication
 - Keep commits professional and descriptive
-- Maintain cyberpunk aesthetic consistency
-- Prioritize features that "feel good" over optimization
+- Maintain neon/cyberpunk aesthetic consistency (avoid overusing "cyberpunk" in branding)
+- Prioritize features that "feel good" over optimization (100% vibe coding)
 - Single-file architecture is intentional for easy deployment
+- **Repository is PUBLIC** - all commits and docs should be professional
+- Open source (MIT License) - welcoming contributions
+
+## Recent Major Changes (Session 2026-02-12)
+1. **Rebranded** from "Typing War" to "Typing Lab"
+2. **Renamed** main file from `typing-war.html` to `index.html`
+3. **Word pool enrichment**: 357 → 5,023 words with random subset loading
+4. **Difficulty increase**: 30-40% faster enemies, 12% per wave scaling, more enemies
+5. **Economy rebalance**: 40% less gold, 50% higher upgrade costs for arcade feel
+6. **Added timer**: MM:SS format showing game duration
+7. **Footer navigation**: GitHub, Discord (soon), Leaderboards (soon)
+8. **Deployment**: Azure Static Web Apps with auto-deploy via GitHub Actions
+9. **Documentation**: Added LICENSE, CONTRIBUTING.md, DEPLOY.md
+10. **Fixed**: Enemy spawn position (y: -100), input field alignment, Python scripts causing deployment failures
 
 ---
-Last updated: 2026-02-12 (Initial setup)
+Last updated: 2026-02-12 (v0.2.0+ - Word pool enrichment & documentation)

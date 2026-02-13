@@ -8,12 +8,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Massively enriched word pool from 357 to 5,023 unique words
+- **Massively enriched word pool**: 357 → 5,023 unique words (14x increase)
   - Tech/gaming vocabulary (500+ terms): programming languages, frameworks, tools
   - Common English words: 2000+ nouns, 1000+ verbs/adjectives
   - Themed categories: science, space, nature, action words
   - Distribution: 980 easy, 2,018 medium, 1,488 hard, 537 boss words
-- Python word generation scripts for reproducibility and future expansion
+  - Random subset loading system (~2,200 words per session for variety)
+- **Game timer**: MM:SS format displaying elapsed time in HUD
+- **Discord link** in footer (coming soon placeholder)
+- Inline SVG favicon with neon "T" logo
+- Python word generation scripts for future word pool updates (local only, not deployed)
+
+### Changed
+- **Arcade-style difficulty scaling**: 12% speed increase per wave (up from 5%)
+- **Enemy base speeds increased** by ~30-40%:
+  - Normal: 0.7 → 0.9 px/frame
+  - Fast: 1.1 → 1.4 px/frame
+  - Tank: 0.45 → 0.6 px/frame
+- **More enemies per wave**: 5 + wave×2 (was 3 + wave×2)
+- **Economy rebalanced for tighter arcade feel**:
+  - Gold rewards reduced ~40%: Normal 10→6, Fast 15→9, Tank 30→18
+  - Upgrade costs increased ~50%: Damage 50+25×level → 75+40×level, Slow 75+30×level → 100+50×level
+- Word loading status message: "words loaded from JSON" → "random words loaded"
+- Removed "cyberpunk" references from UI text (kept aesthetic, changed branding to "neon-styled")
+
+### Fixed
+- **Enemy spawn position**: Changed from y:0 to y:-100 to prevent word cutoff at screen top
+- **Input field alignment**: Added padding to game-container to prevent footer overlap
+- **Azure deployment failures**: Excluded Python scripts from git repo (added to .gitignore)
+
+### Technical
+- Random word subset selection using Fisher-Yates shuffle algorithm
+- Game timer state tracking with `gameStartTime` and `gameTime` properties
+- Python scripts remain available locally but excluded from deployment
 
 ### Planned
 - Sound effects and music
