@@ -1493,7 +1493,7 @@
                         <div class="shop-item-name">Damage Boost <span class="shop-item-key">[1]</span></div>
                         <div class="shop-item-desc">+20% damage per shot</div>
                     </div>
-                    <div class="shop-item-price" id="damagePrice">50g</div>
+                    <div class="shop-item-price" id="damagePrice">75g</div>
                     <button onclick="buyUpgrade('damage')">Buy</button>
                 </div>
                 <div class="shop-item" data-index="1" data-upgrade="slow">
@@ -1501,7 +1501,7 @@
                         <div class="shop-item-name">Slow Field <span class="shop-item-key">[2]</span></div>
                         <div class="shop-item-desc">Enemies move 15% slower</div>
                     </div>
-                    <div class="shop-item-price" id="slowPrice">75g</div>
+                    <div class="shop-item-price" id="slowPrice">100g</div>
                     <button onclick="buyUpgrade('slow')">Buy</button>
                 </div>
                 <div class="shop-item" data-index="2" data-upgrade="repair">
@@ -1509,7 +1509,7 @@
                         <div class="shop-item-name">Base Repair <span class="shop-item-key">[3]</span></div>
                         <div class="shop-item-desc">Restore 30 HP to your base</div>
                     </div>
-                    <div class="shop-item-price">40g</div>
+                    <div class="shop-item-price">50g</div>
                     <button onclick="buyUpgrade('repair')">Buy</button>
                 </div>
                 <div class="shop-item" data-index="3" data-upgrade="gold">
@@ -1517,7 +1517,7 @@
                         <div class="shop-item-name">Gold Magnet <span class="shop-item-key">[4]</span></div>
                         <div class="shop-item-desc">+50% gold from kills</div>
                     </div>
-                    <div class="shop-item-price" id="goldPrice">60g</div>
+                    <div class="shop-item-price" id="goldPrice">90g</div>
                     <button onclick="buyUpgrade('gold')">Buy</button>
                 </div>
             </div>
@@ -1807,13 +1807,13 @@
                 word = wordPools.hard[Math.floor(Math.random() * wordPools.hard.length)];
                 hp = 3;
                 speed = 0.6;
-                goldValue = 30;
+                goldValue = 18;
             } else if (waveNum >= 3 && rand < 0.4) {
                 type = 'fast';
                 word = wordPools.medium[Math.floor(Math.random() * wordPools.medium.length)];
                 hp = 1;
                 speed = 1.4;
-                goldValue = 15;
+                goldValue = 9;
             } else {
                 type = 'normal';
                 if (waveNum >= 7) {
@@ -1823,7 +1823,7 @@
                 }
                 hp = 1;
                 speed = 0.9;
-                goldValue = 10;
+                goldValue = 6;
             }
 
             // ARCADE SCALING: Aggressive speed increase per wave
@@ -2362,9 +2362,9 @@
         }
 
         function updateShopPrices() {
-            const damagePrice = 50 + state.damageUpgrades * 25;
-            const slowPrice = 75 + state.slowUpgrades * 30;
-            const goldPrice = 60 + state.goldUpgrades * 20;
+            const damagePrice = 75 + state.damageUpgrades * 40;
+            const slowPrice = 100 + state.slowUpgrades * 50;
+            const goldPrice = 90 + state.goldUpgrades * 30;
 
             document.getElementById('damagePrice').textContent = damagePrice + 'g';
             document.getElementById('slowPrice').textContent = slowPrice + 'g';
@@ -2375,21 +2375,21 @@
             let cost = 0;
 
             if (type === 'damage') {
-                cost = 50 + state.damageUpgrades * 25;
+                cost = 75 + state.damageUpgrades * 40;
                 if (state.gold >= cost) {
                     state.gold -= cost;
                     state.damageMultiplier += 0.2;
                     state.damageUpgrades++;
                 }
             } else if (type === 'slow') {
-                cost = 75 + state.slowUpgrades * 30;
+                cost = 100 + state.slowUpgrades * 50;
                 if (state.gold >= cost) {
                     state.gold -= cost;
                     state.slowMultiplier *= 0.85;
                     state.slowUpgrades++;
                 }
             } else if (type === 'repair') {
-                cost = 40;
+                cost = 50;
                 if (state.gold >= cost) {
                     state.gold -= cost;
                     state.baseHP = Math.min(state.maxBaseHP, state.baseHP + 30);
