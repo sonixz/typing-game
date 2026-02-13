@@ -1,0 +1,2347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Typing War</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+            background: #050814;
+            color: #e0e6ff;
+            overflow: hidden;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* Grid + Scanlines Combined */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image:
+                repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.15) 0px, rgba(0, 0, 0, 0.15) 1px, transparent 1px, transparent 2px),
+                linear-gradient(90deg, rgba(0, 255, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(0deg, rgba(0, 255, 255, 0.05) 1px, transparent 1px);
+            background-size: 100% 100%, 40px 40px, 40px 40px;
+            pointer-events: none;
+            z-index: 999;
+            animation: scanlines 8s linear infinite;
+        }
+
+        body::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 50% 50%, rgba(0, 255, 255, 0.05) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+            animation: pulse 4s ease-in-out infinite;
+        }
+
+        @keyframes scanlines {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(10px); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        .game-container {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Screen vignette */
+        .game-container::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.5) 100%);
+            pointer-events: none;
+            z-index: 998;
+        }
+
+        /* Screen corners */
+        .game-container::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 2px solid rgba(0, 255, 255, 0.3);
+            pointer-events: none;
+            z-index: 1000;
+            box-shadow: inset 0 0 100px rgba(0, 255, 255, 0.1);
+        }
+
+        /* Top HUD */
+        .hud {
+            display: flex;
+            justify-content: space-between;
+            padding: 1.5rem 2rem;
+            background: rgba(5, 8, 20, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 3px solid #00ffff;
+            box-shadow:
+                0 0 30px rgba(0, 255, 255, 0.5),
+                0 4px 0 rgba(0, 255, 255, 0.2),
+                inset 0 -4px 20px rgba(0, 255, 255, 0.1);
+            z-index: 100;
+            position: relative;
+        }
+
+        .hud::before {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #ff0080, #00ffff, #8a2be2, #00ffff, #ff0080);
+            background-size: 200% 100%;
+            animation: hudBorder 4s linear infinite;
+        }
+
+        @keyframes hudBorder {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 200% 0%; }
+        }
+
+        .hud-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            padding: 0.75rem 1.25rem;
+            background: rgba(0, 255, 255, 0.05);
+            border: 2px solid rgba(0, 255, 255, 0.5);
+            clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+            position: relative;
+            box-shadow:
+                0 0 20px rgba(0, 255, 255, 0.3),
+                inset 0 0 20px rgba(0, 255, 255, 0.05);
+        }
+
+        .hud-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            background: linear-gradient(180deg, #00ffff, transparent);
+            animation: scanLine 2s linear infinite;
+        }
+
+        @keyframes scanLine {
+            0% { opacity: 0.3; }
+            50% { opacity: 1; }
+            100% { opacity: 0.3; }
+        }
+
+        /* Corner brackets */
+        .hud-item::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            width: 15px;
+            height: 15px;
+            border-top: 3px solid #ff0080;
+            border-left: 3px solid #ff0080;
+            box-shadow: 0 0 10px rgba(255, 0, 128, 0.8);
+        }
+
+        .hud-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            opacity: 0.6;
+            font-weight: 700;
+            color: #00ffff;
+        }
+
+        .hud-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            font-family: 'Courier New', monospace;
+        }
+
+        .hud-health {
+            color: #ff0080;
+            text-shadow: 0 0 10px rgba(255, 0, 128, 0.5);
+        }
+
+        .hud-gold {
+            color: #ffaa00;
+            text-shadow: 0 0 10px rgba(255, 170, 0, 0.5);
+        }
+
+        .hud-score {
+            color: #00ffff;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+
+        .hud-combo {
+            color: #ff0080;
+            text-shadow: 0 0 15px rgba(255, 0, 128, 0.8);
+            animation: comboGlow 1s ease-in-out infinite;
+        }
+
+        @keyframes comboGlow {
+            0%, 100% {
+                text-shadow: 0 0 15px rgba(255, 0, 128, 0.8);
+            }
+            50% {
+                text-shadow: 0 0 25px rgba(255, 0, 128, 1), 0 0 40px rgba(255, 0, 128, 0.6);
+            }
+        }
+
+        #comboDisplay.combo-break {
+            animation: comboBreak 0.5s ease;
+        }
+
+        @keyframes comboBreak {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(0.8);
+                opacity: 0.3;
+                filter: brightness(0.5);
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Game Arena */
+        .arena {
+            flex: 1;
+            position: relative;
+            background: #050814;
+            overflow: hidden;
+            animation: arenaBreath 8s ease-in-out infinite;
+        }
+
+        @keyframes arenaBreath {
+            0%, 100% {
+                box-shadow: inset 0 0 100px rgba(0, 255, 255, 0.05);
+            }
+            50% {
+                box-shadow: inset 0 0 150px rgba(0, 255, 255, 0.1);
+            }
+        }
+
+        .arena::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image:
+                radial-gradient(circle at 20% 30%, rgba(0, 255, 255, 0.02) 2px, transparent 2px),
+                radial-gradient(circle at 80% 70%, rgba(255, 0, 128, 0.02) 2px, transparent 2px),
+                radial-gradient(circle at 50% 50%, rgba(138, 43, 226, 0.02) 2px, transparent 2px);
+            background-size: 50px 50px, 70px 70px, 60px 60px;
+            background-position: 0 0, 30px 30px, 15px 15px;
+            animation: particleFloat 20s linear infinite;
+        }
+
+        @keyframes particleFloat {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-100px); }
+        }
+
+        .base {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: linear-gradient(to top, rgba(0, 255, 255, 0.2), rgba(0, 255, 255, 0.05));
+            border-top: 4px solid #00ffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.3em;
+            color: #00ffff;
+            position: relative;
+            box-shadow:
+                0 -8px 40px rgba(0, 255, 255, 0.6),
+                inset 0 0 30px rgba(0, 255, 255, 0.2);
+            text-shadow: 0 0 15px rgba(0, 255, 255, 1);
+        }
+
+        .base::before {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #00ffff, #ff0080, #8a2be2, #00ffff);
+            background-size: 200% 100%;
+            animation: baseScan 3s linear infinite;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 1);
+        }
+
+        @keyframes baseScan {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 200% 0%; }
+        }
+
+        .base::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            animation: baseShimmer 2s linear infinite;
+        }
+
+        @keyframes baseShimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .enemy {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            transition: transform 0.1s ease;
+        }
+
+        .enemy.hit {
+            animation: hitFlash 0.3s ease;
+        }
+
+        @keyframes hitFlash {
+            0% {
+                transform: scale(1);
+                filter: brightness(1) drop-shadow(0 0 0 transparent);
+            }
+            25% {
+                transform: scale(1.15) translate(-2px, 0);
+                filter: brightness(2) drop-shadow(3px 0 0 #ff0080) drop-shadow(-3px 0 0 #00ffff);
+            }
+            50% {
+                transform: scale(1.2) translate(2px, 0);
+                filter: brightness(2.5) drop-shadow(-3px 0 0 #ff0080) drop-shadow(3px 0 0 #00ffff);
+            }
+            75% {
+                transform: scale(1.1) translate(-1px, 0);
+                filter: brightness(1.8) drop-shadow(2px 0 0 #ff0080) drop-shadow(-2px 0 0 #00ffff);
+            }
+            100% {
+                transform: scale(1);
+                filter: brightness(1) drop-shadow(0 0 0 transparent);
+            }
+        }
+
+        .enemy-shape {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 0, 128, 0.3);
+            border: 3px solid #ff0080;
+            clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+            box-shadow:
+                0 0 30px rgba(255, 0, 128, 0.8),
+                inset 0 0 15px rgba(255, 0, 128, 0.5),
+                0 0 60px rgba(255, 0, 128, 0.4);
+            position: relative;
+            animation: enemyPulse 1.5s ease-in-out infinite, enemyRotate 8s linear infinite;
+        }
+
+        @keyframes enemyPulse {
+            0%, 100% {
+                box-shadow:
+                    0 0 30px rgba(255, 0, 128, 0.8),
+                    inset 0 0 15px rgba(255, 0, 128, 0.5),
+                    0 0 60px rgba(255, 0, 128, 0.4);
+                transform: scale(1);
+            }
+            50% {
+                box-shadow:
+                    0 0 50px rgba(255, 0, 128, 1),
+                    inset 0 0 25px rgba(255, 0, 128, 0.7),
+                    0 0 80px rgba(255, 0, 128, 0.6);
+                transform: scale(1.05);
+            }
+        }
+
+        @keyframes enemyRotate {
+            0% { filter: hue-rotate(0deg); }
+            100% { filter: hue-rotate(360deg); }
+        }
+
+        .enemy-shape::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60%;
+            height: 60%;
+            background: #ff0080;
+            clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+            animation: innerPulse 1s ease-in-out infinite;
+        }
+
+        @keyframes innerPulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        .enemy-shape.fast {
+            background: rgba(255, 170, 0, 0.3);
+            border: 3px solid #ffaa00;
+            clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+            box-shadow:
+                0 0 30px rgba(255, 170, 0, 0.8),
+                inset 0 0 15px rgba(255, 170, 0, 0.5),
+                0 0 60px rgba(255, 170, 0, 0.4);
+            animation: enemyPulse 1s ease-in-out infinite, enemySpin 2s linear infinite;
+        }
+
+        @keyframes enemySpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .enemy-shape.fast::before {
+            background: #ffaa00;
+            clip-path: polygon(50% 20%, 80% 50%, 50% 80%, 20% 50%);
+            box-shadow: 0 0 20px rgba(255, 170, 0, 1);
+        }
+
+        .enemy-shape.tank {
+            background: rgba(138, 43, 226, 0.3);
+            border: 3px solid #8a2be2;
+            clip-path: polygon(20% 0, 80% 0, 100% 20%, 100% 80%, 80% 100%, 20% 100%, 0 80%, 0 20%);
+            width: 50px;
+            height: 50px;
+            box-shadow:
+                0 0 30px rgba(138, 43, 226, 0.8),
+                inset 0 0 15px rgba(138, 43, 226, 0.5),
+                0 0 60px rgba(138, 43, 226, 0.4);
+            animation: enemyPulse 2s ease-in-out infinite, tankPulse 1s ease-in-out infinite;
+        }
+
+        @keyframes tankPulse {
+            0%, 100% { border-color: #8a2be2; }
+            50% { border-color: #ff0080; }
+        }
+
+        .enemy-shape.tank::before {
+            background: #8a2be2;
+            clip-path: polygon(30% 0, 70% 0, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0 70%, 0 30%);
+            box-shadow: 0 0 20px rgba(138, 43, 226, 1);
+        }
+
+        .enemy-hp-bar {
+            position: absolute;
+            bottom: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            height: 3px;
+            background: rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            border: 1px solid rgba(0, 255, 255, 0.3);
+        }
+
+        .enemy-hp-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ffff, #00ffff);
+            transition: width 0.2s ease;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+        }
+
+        .enemy-word {
+            font-size: 1rem;
+            font-weight: 700;
+            background: rgba(10, 14, 39, 0.95);
+            padding: 0.5rem 0.75rem;
+            border: 1px solid rgba(0, 255, 255, 0.5);
+            clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3), inset 0 0 10px rgba(0, 255, 255, 0.1);
+            letter-spacing: 0.1em;
+            white-space: nowrap;
+            color: #e0e6ff;
+            font-family: 'Courier New', monospace;
+        }
+
+        .enemy-word .char {
+            display: inline-block;
+            transition: all 0.15s ease;
+        }
+
+        .enemy-word .char.typed {
+            color: #00ffff;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.8), 0 0 20px rgba(0, 255, 255, 0.4);
+        }
+
+        /* Input Area */
+        .input-area {
+            padding: 2rem;
+            background: rgba(5, 8, 20, 0.95);
+            backdrop-filter: blur(10px);
+            border-top: 3px solid #00ffff;
+            box-shadow:
+                0 -8px 40px rgba(0, 255, 255, 0.5),
+                inset 0 4px 20px rgba(0, 255, 255, 0.1);
+            z-index: 100;
+            position: relative;
+        }
+
+        .input-area::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #ff0080, #00ffff, #8a2be2, #00ffff, #ff0080);
+            background-size: 200% 100%;
+            animation: inputBorder 4s linear infinite;
+        }
+
+        @keyframes inputBorder {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 200% 0%; }
+        }
+
+        .input-field {
+            width: 100%;
+            font-size: 1.6rem;
+            padding: 1.25rem 1.5rem;
+            border: 3px solid rgba(0, 255, 255, 0.7);
+            clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+            text-align: center;
+            font-family: 'Courier New', monospace;
+            font-weight: 700;
+            background: rgba(0, 20, 40, 0.8);
+            color: #00ffff;
+            transition: all 0.2s ease;
+            letter-spacing: 0.15em;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+            animation: inputGlow 2s ease-in-out infinite;
+            position: relative;
+        }
+
+        @keyframes inputGlow {
+            0%, 100% {
+                box-shadow:
+                    0 0 20px rgba(0, 255, 255, 0.4),
+                    inset 0 0 20px rgba(0, 255, 255, 0.1);
+            }
+            50% {
+                box-shadow:
+                    0 0 40px rgba(0, 255, 255, 0.6),
+                    inset 0 0 30px rgba(0, 255, 255, 0.15);
+            }
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #00ffff;
+            background: rgba(0, 30, 50, 0.9);
+            box-shadow:
+                0 0 40px rgba(0, 255, 255, 0.8),
+                inset 0 0 30px rgba(0, 255, 255, 0.2),
+                0 0 60px rgba(0, 255, 255, 0.4);
+            animation: none;
+        }
+
+        .input-field.error {
+            animation: shake 0.3s ease;
+            border-color: #ff0080;
+            box-shadow: 0 0 20px rgba(255, 0, 128, 0.6);
+        }
+
+        .input-field::placeholder {
+            color: rgba(0, 255, 255, 0.3);
+            font-weight: 500;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+
+        /* Start Screen */
+        .start-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(10, 14, 39, 0.98);
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2.5rem;
+            z-index: 200;
+        }
+
+        .start-screen.hidden {
+            display: none;
+        }
+
+        .start-screen h1 {
+            font-size: 4.5rem;
+            font-weight: 900;
+            letter-spacing: 0.25em;
+            color: #00ffff;
+            text-shadow:
+                0 0 10px rgba(0, 255, 255, 1),
+                0 0 20px rgba(0, 255, 255, 0.8),
+                0 0 40px rgba(0, 255, 255, 0.6),
+                0 0 80px rgba(0, 255, 255, 0.4),
+                0 0 160px rgba(0, 255, 255, 0.2),
+                2px 2px 0 rgba(255, 0, 128, 0.5),
+                -2px -2px 0 rgba(138, 43, 226, 0.5);
+            position: relative;
+            font-family: 'Courier New', monospace;
+            animation: glitch 3s infinite, titlePulse 2s ease-in-out infinite;
+        }
+
+        @keyframes glitch {
+            0%, 90%, 100% { transform: translate(0); }
+            91% { transform: translate(-2px, 2px); text-shadow: 0 0 10px rgba(0, 255, 255, 1), 3px 3px 0 #ff0080, -3px -3px 0 #8a2be2; }
+            93% { transform: translate(2px, -2px); text-shadow: 0 0 10px rgba(0, 255, 255, 1), -3px -3px 0 #ff0080, 3px 3px 0 #8a2be2; }
+            95% { transform: translate(0); }
+        }
+
+        @keyframes titlePulse {
+            0%, 100% {
+                text-shadow:
+                    0 0 10px rgba(0, 255, 255, 1),
+                    0 0 20px rgba(0, 255, 255, 0.8),
+                    0 0 40px rgba(0, 255, 255, 0.6),
+                    0 0 80px rgba(0, 255, 255, 0.4),
+                    0 0 160px rgba(0, 255, 255, 0.2);
+            }
+            50% {
+                text-shadow:
+                    0 0 20px rgba(0, 255, 255, 1),
+                    0 0 30px rgba(0, 255, 255, 1),
+                    0 0 60px rgba(0, 255, 255, 0.8),
+                    0 0 100px rgba(0, 255, 255, 0.6),
+                    0 0 200px rgba(0, 255, 255, 0.4);
+            }
+        }
+
+        .start-screen h1::before {
+            content: '> ';
+            color: #ff0080;
+            text-shadow: 0 0 20px rgba(255, 0, 128, 1);
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 49%, 100% { opacity: 1; }
+            50%, 99% { opacity: 0.3; }
+        }
+
+        .start-screen h1::after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #00ffff, #ff0080, #00ffff, transparent);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 1);
+            animation: borderSweep 3s linear infinite;
+        }
+
+        @keyframes borderSweep {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .start-screen p {
+            font-size: 1rem;
+            color: rgba(224, 230, 255, 0.7);
+            max-width: 500px;
+            text-align: center;
+            line-height: 1.8;
+            font-weight: 400;
+            letter-spacing: 0.05em;
+            border-left: 2px solid rgba(0, 255, 255, 0.3);
+            padding-left: 1.5rem;
+        }
+
+        button {
+            padding: 1.2rem 2.5rem;
+            font-size: 1.1rem;
+            font-weight: 900;
+            border: 3px solid #00ffff;
+            background: rgba(0, 255, 255, 0.15);
+            color: #00ffff;
+            clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            box-shadow:
+                0 0 30px rgba(0, 255, 255, 0.5),
+                inset 0 0 20px rgba(0, 255, 255, 0.2),
+                0 0 60px rgba(0, 255, 255, 0.3);
+            position: relative;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+            overflow: hidden;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: left 0.5s ease;
+        }
+
+        button:hover::before {
+            left: 100%;
+        }
+
+        button::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            width: 20px;
+            height: 20px;
+            border-top: 4px solid #ff0080;
+            border-left: 4px solid #ff0080;
+            box-shadow: 0 0 15px rgba(255, 0, 128, 1);
+            animation: cornerGlow 2s ease-in-out infinite;
+        }
+
+        @keyframes cornerGlow {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        button:hover {
+            background: rgba(0, 255, 255, 0.3);
+            box-shadow:
+                0 0 50px rgba(0, 255, 255, 0.8),
+                inset 0 0 30px rgba(0, 255, 255, 0.3),
+                0 0 80px rgba(0, 255, 255, 0.5);
+            transform: translateY(-4px) scale(1.02);
+            border-color: #ff0080;
+            text-shadow: 0 0 15px rgba(0, 255, 255, 1);
+        }
+
+        button:active {
+            transform: translateY(-2px) scale(1);
+            box-shadow:
+                0 0 40px rgba(0, 255, 255, 0.6),
+                inset 0 0 25px rgba(0, 255, 255, 0.3),
+                0 0 70px rgba(0, 255, 255, 0.4);
+        }
+
+        /* Upgrade Shop */
+        .shop {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(5, 8, 20, 0.98);
+            backdrop-filter: blur(20px);
+            padding: 2.5rem;
+            clip-path: polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px);
+            border: 3px solid #00ffff;
+            box-shadow:
+                0 0 60px rgba(0, 255, 255, 0.6),
+                inset 0 0 50px rgba(0, 255, 255, 0.1),
+                0 0 100px rgba(0, 255, 255, 0.3);
+            z-index: 200;
+            min-width: 550px;
+            animation: shopPulse 3s ease-in-out infinite;
+        }
+
+        @keyframes shopPulse {
+            0%, 100% {
+                box-shadow:
+                    0 0 60px rgba(0, 255, 255, 0.6),
+                    inset 0 0 50px rgba(0, 255, 255, 0.1),
+                    0 0 100px rgba(0, 255, 255, 0.3);
+            }
+            50% {
+                box-shadow:
+                    0 0 80px rgba(0, 255, 255, 0.8),
+                    inset 0 0 70px rgba(0, 255, 255, 0.15),
+                    0 0 120px rgba(0, 255, 255, 0.5);
+            }
+        }
+
+        .shop.hidden {
+            display: none;
+        }
+
+        .shop h2 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            font-weight: 900;
+            color: #00ffff;
+            text-shadow: 0 0 20px rgba(0, 255, 255, 0.6);
+            letter-spacing: 0.1em;
+            font-family: 'Courier New', monospace;
+        }
+
+        .shop-subtitle {
+            color: rgba(224, 230, 255, 0.6);
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+            font-weight: 400;
+            letter-spacing: 0.05em;
+        }
+
+        .shop-items {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .shop-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.25rem;
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+            background: rgba(0, 255, 255, 0.05);
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .shop-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 2px;
+            height: 100%;
+            background: linear-gradient(180deg, #00ffff, transparent);
+        }
+
+        .shop-item:hover {
+            border-color: #00ffff;
+            background: rgba(0, 255, 255, 0.1);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.2), inset 0 0 20px rgba(0, 255, 255, 0.05);
+        }
+
+        .shop-item.selected {
+            border-color: #ff0080;
+            border-width: 3px;
+            background: rgba(255, 0, 128, 0.15);
+            box-shadow:
+                0 0 30px rgba(255, 0, 128, 0.5),
+                inset 0 0 30px rgba(255, 0, 128, 0.1);
+            transform: scale(1.02);
+        }
+
+        .shop-item.selected::before {
+            background: linear-gradient(180deg, #ff0080, transparent);
+            width: 3px;
+        }
+
+        .shop-item-key {
+            color: #ffaa00;
+            font-size: 0.85rem;
+            font-weight: 700;
+            opacity: 0.7;
+        }
+
+        .shop-item-info {
+            flex: 1;
+        }
+
+        .shop-item-name {
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+            font-size: 1rem;
+            color: #00ffff;
+            letter-spacing: 0.05em;
+        }
+
+        .shop-item-desc {
+            font-size: 0.85rem;
+            color: rgba(224, 230, 255, 0.6);
+            font-weight: 400;
+        }
+
+        .shop-item-price {
+            font-weight: 700;
+            color: #ffaa00;
+            margin-right: 1rem;
+            font-size: 1.1rem;
+            text-shadow: 0 0 10px rgba(255, 170, 0, 0.5);
+            font-family: 'Courier New', monospace;
+        }
+
+        .shop-item button {
+            padding: 0.6rem 1.2rem;
+            font-size: 0.8rem;
+        }
+
+        .shop-item button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .continue-btn {
+            width: 100%;
+            background: rgba(0, 255, 255, 0.2);
+            border-color: #00ffff;
+            color: #00ffff;
+            font-size: 1.1rem;
+            padding: 1.25rem 2rem;
+            margin-top: 0.5rem;
+        }
+
+        .continue-btn:hover {
+            background: rgba(0, 255, 255, 0.3);
+        }
+
+        .continue-btn.selected {
+            border-color: #ff0080;
+            border-width: 3px;
+            background: rgba(255, 0, 128, 0.25);
+            box-shadow:
+                0 0 40px rgba(255, 0, 128, 0.6),
+                inset 0 0 40px rgba(255, 0, 128, 0.15);
+            transform: scale(1.02);
+        }
+
+        /* Game Over */
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(5, 8, 20, 0.98);
+            backdrop-filter: blur(20px);
+            padding: 3rem;
+            clip-path: polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px);
+            border: 4px solid #ff0080;
+            box-shadow:
+                0 0 60px rgba(255, 0, 128, 0.8),
+                inset 0 0 50px rgba(255, 0, 128, 0.15),
+                0 0 100px rgba(255, 0, 128, 0.5);
+            text-align: center;
+            z-index: 200;
+            animation: gameOverPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes gameOverPulse {
+            0%, 100% {
+                box-shadow:
+                    0 0 60px rgba(255, 0, 128, 0.8),
+                    inset 0 0 50px rgba(255, 0, 128, 0.15),
+                    0 0 100px rgba(255, 0, 128, 0.5);
+            }
+            50% {
+                box-shadow:
+                    0 0 80px rgba(255, 0, 128, 1),
+                    inset 0 0 70px rgba(255, 0, 128, 0.2),
+                    0 0 120px rgba(255, 0, 128, 0.7);
+            }
+        }
+
+        .game-over.hidden {
+            display: none;
+        }
+
+        .game-over h2 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            font-weight: 900;
+            color: #ff0080;
+            text-shadow:
+                0 0 20px rgba(255, 0, 128, 1),
+                0 0 40px rgba(255, 0, 128, 0.8),
+                0 0 60px rgba(255, 0, 128, 0.6),
+                0 0 100px rgba(255, 0, 128, 0.4),
+                3px 3px 0 rgba(0, 255, 255, 0.8),
+                -3px -3px 0 rgba(138, 43, 226, 0.8);
+            letter-spacing: 0.2em;
+            font-family: 'Courier New', monospace;
+            animation: gameOverGlitch 3s infinite;
+        }
+
+        @keyframes gameOverGlitch {
+            0%, 90%, 100% { transform: translate(0); }
+            91% {
+                transform: translate(-3px, 3px);
+                text-shadow:
+                    0 0 20px rgba(255, 0, 128, 1),
+                    5px 5px 0 #00ffff,
+                    -5px -5px 0 #8a2be2;
+            }
+            93% {
+                transform: translate(3px, -3px);
+                text-shadow:
+                    0 0 20px rgba(255, 0, 128, 1),
+                    -5px -5px 0 #00ffff,
+                    5px 5px 0 #8a2be2;
+            }
+            95% { transform: translate(0); }
+        }
+
+        .game-over-stats {
+            margin: 2rem 0;
+            display: flex;
+            gap: 3rem;
+            justify-content: center;
+        }
+
+        .game-over-stat {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            padding: 1rem 1.5rem;
+            background: rgba(0, 255, 255, 0.05);
+            clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+        }
+
+        .game-over-stat-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: rgba(0, 255, 255, 0.6);
+            font-weight: 700;
+            letter-spacing: 0.15em;
+        }
+
+        .game-over-stat-value {
+            font-size: 2rem;
+            font-weight: 900;
+            color: #00ffff;
+            text-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
+            font-family: 'Courier New', monospace;
+        }
+
+        footer {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            font-size: 0.7rem;
+            color: rgba(0, 255, 255, 0.4);
+            letter-spacing: 0.1em;
+            z-index: 300;
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+            background: rgba(0, 255, 255, 0.05);
+            clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+        }
+
+        .wave-announcement {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5rem;
+            font-weight: 900;
+            color: #00ffff;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 150;
+            text-shadow:
+                0 0 20px rgba(0, 255, 255, 1),
+                0 0 40px rgba(0, 255, 255, 0.8),
+                0 0 60px rgba(0, 255, 255, 0.6),
+                0 0 100px rgba(0, 255, 255, 0.4),
+                0 0 200px rgba(0, 255, 255, 0.2),
+                4px 4px 0 rgba(255, 0, 128, 0.8),
+                -4px -4px 0 rgba(138, 43, 226, 0.8);
+            font-family: 'Courier New', monospace;
+            letter-spacing: 0.3em;
+        }
+
+        .wave-announcement.show {
+            animation: waveAnnounce 2s ease, waveGlitch 2s ease;
+        }
+
+        @keyframes waveAnnounce {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.3);
+            }
+            10% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1.2);
+            }
+            15% {
+                transform: translate(-50%, -50%) scale(1.15);
+            }
+            80% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(1.5);
+            }
+        }
+
+        @keyframes waveGlitch {
+            0%, 10%, 15%, 20%, 80%, 100% { filter: none; }
+            11% { filter: drop-shadow(5px 0 0 #ff0080) drop-shadow(-5px 0 0 #00ffff); }
+            13% { filter: drop-shadow(-5px 0 0 #ff0080) drop-shadow(5px 0 0 #00ffff); }
+            16% { filter: drop-shadow(3px 3px 0 #8a2be2) drop-shadow(-3px -3px 0 #ffaa00); }
+            18% { filter: drop-shadow(-3px 3px 0 #8a2be2) drop-shadow(3px -3px 0 #ffaa00); }
+        }
+
+        /* Combo Announcement */
+        .combo-announcement {
+            position: absolute;
+            top: 35%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3.5rem;
+            font-weight: 900;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 160;
+            text-shadow:
+                0 0 20px currentColor,
+                0 0 40px currentColor,
+                0 0 60px currentColor,
+                3px 3px 0 rgba(0, 0, 0, 0.5);
+            font-family: 'Courier New', monospace;
+            letter-spacing: 0.2em;
+        }
+
+        .combo-announcement.show {
+            animation: comboAnnounce 1.5s ease;
+        }
+
+        @keyframes comboAnnounce {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.5) translateY(50px);
+            }
+            15% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1.2) translateY(0);
+            }
+            25% {
+                transform: translate(-50%, -50%) scale(1) translateY(0);
+            }
+            75% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1) translateY(0);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.8) translateY(-30px);
+            }
+        }
+
+        /* Speed Announcement */
+        .speed-announcement {
+            position: absolute;
+            top: 60%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2.5rem;
+            font-weight: 900;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 160;
+            text-shadow:
+                0 0 20px currentColor,
+                0 0 40px currentColor,
+                0 0 60px currentColor,
+                3px 3px 0 rgba(0, 0, 0, 0.5);
+            font-family: 'Courier New', monospace;
+            letter-spacing: 0.15em;
+        }
+
+        .speed-announcement.show {
+            animation: speedAnnounce 1.2s ease;
+        }
+
+        @keyframes speedAnnounce {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.3) translateX(-100px);
+            }
+            20% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1.15) translateX(0);
+            }
+            30% {
+                transform: translate(-50%, -50%) scale(1) translateX(0);
+            }
+            80% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1) translateX(0);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.7) translateX(100px);
+            }
+        }
+
+        /* Damage Numbers */
+        .damage-number {
+            position: absolute;
+            font-size: 2rem;
+            font-weight: 900;
+            font-family: 'Courier New', monospace;
+            pointer-events: none;
+            z-index: 140;
+            color: #00ffff;
+            text-shadow:
+                0 0 10px currentColor,
+                0 0 20px currentColor,
+                2px 2px 0 rgba(0, 0, 0, 0.5);
+            animation: damageFloat 1s ease-out forwards;
+        }
+
+        .damage-number.perfect {
+            color: #ffaa00;
+            font-size: 2.5rem;
+            text-shadow:
+                0 0 15px currentColor,
+                0 0 30px currentColor,
+                2px 2px 0 rgba(0, 0, 0, 0.5);
+        }
+
+        .damage-number.combo {
+            color: #ff0080;
+            font-size: 3rem;
+            text-shadow:
+                0 0 20px currentColor,
+                0 0 40px currentColor,
+                3px 3px 0 rgba(0, 0, 0, 0.5);
+        }
+
+        .damage-number.speed-bonus {
+            color: #ffaa00;
+            font-size: 3.5rem;
+            text-shadow:
+                0 0 30px currentColor,
+                0 0 60px currentColor,
+                0 0 90px currentColor,
+                4px 4px 0 rgba(0, 0, 0, 0.5);
+            animation: damageFloat 1s ease-out forwards, speedPulse 0.3s ease-out;
+        }
+
+        @keyframes speedPulse {
+            0% {
+                transform: translateY(0) scale(0.8);
+            }
+            50% {
+                transform: translateY(-5px) scale(1.3);
+            }
+            100% {
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes damageFloat {
+            0% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            20% {
+                transform: translateY(-10px) scale(1.1);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-60px) scale(0.8);
+            }
+        }
+
+        /* Screen Shake on Base Hit */
+        .game-container.shake {
+            animation: screenShake 0.5s cubic-bezier(.36,.07,.19,.97);
+        }
+
+        @keyframes screenShake {
+            0%, 100% {
+                transform: translate(0, 0);
+            }
+            10% {
+                transform: translate(-8px, 2px);
+            }
+            20% {
+                transform: translate(8px, -2px);
+            }
+            30% {
+                transform: translate(-6px, 3px);
+            }
+            40% {
+                transform: translate(6px, -3px);
+            }
+            50% {
+                transform: translate(-4px, 2px);
+            }
+            60% {
+                transform: translate(4px, -2px);
+            }
+            70% {
+                transform: translate(-2px, 1px);
+            }
+            80% {
+                transform: translate(2px, -1px);
+            }
+            90% {
+                transform: translate(-1px, 0px);
+            }
+        }
+
+        /* Base Hit Flash */
+        .base-hit-flash {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(ellipse at bottom, rgba(255, 0, 128, 0.4) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 999;
+            animation: baseFlash 0.4s ease-out forwards;
+        }
+
+        @keyframes baseFlash {
+            0% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <!-- HUD -->
+        <div class="hud">
+            <div class="hud-item">
+                <div class="hud-label">Base HP</div>
+                <div class="hud-value hud-health" id="baseHP">100</div>
+            </div>
+            <div class="hud-item">
+                <div class="hud-label">Wave</div>
+                <div class="hud-value" id="wave">1</div>
+            </div>
+            <div class="hud-item">
+                <div class="hud-label">Gold</div>
+                <div class="hud-value hud-gold" id="gold">0</div>
+            </div>
+            <div class="hud-item">
+                <div class="hud-label">Score</div>
+                <div class="hud-value hud-score" id="score">0</div>
+            </div>
+            <div class="hud-item" id="comboDisplay">
+                <div class="hud-label">Combo</div>
+                <div class="hud-value hud-combo" id="combo">0x</div>
+            </div>
+        </div>
+
+        <!-- Arena -->
+        <div class="arena" id="arena">
+            <div class="base">YOUR BASE</div>
+            <div class="wave-announcement" id="waveAnnounce"></div>
+            <div class="combo-announcement" id="comboAnnouncement"></div>
+            <div class="speed-announcement" id="speedAnnouncement"></div>
+        </div>
+
+        <!-- Input -->
+        <div class="input-area">
+            <input type="text" class="input-field" id="inputField" placeholder="Type to shoot..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+        </div>
+
+        <!-- Start Screen -->
+        <div class="start-screen" id="startScreen">
+            <h1>TYPING WAR</h1>
+            <p>Type enemy words to destroy them before they reach your base. Survive waves and upgrade your defenses.</p>
+            <p id="wordStatus" style="font-size: 0.8rem; color: rgba(0, 255, 255, 0.5); margin-top: 1rem;">Loading words...</p>
+            <button id="startBtn">START</button>
+        </div>
+
+        <!-- Shop -->
+        <div class="shop hidden" id="shop">
+            <h2>Upgrade Shop</h2>
+            <p class="shop-subtitle">Wave Complete! Prepare for the next assault.</p>
+            <div class="shop-items">
+                <div class="shop-item" data-index="0" data-upgrade="damage">
+                    <div class="shop-item-info">
+                        <div class="shop-item-name">Damage Boost <span class="shop-item-key">[1]</span></div>
+                        <div class="shop-item-desc">+20% damage per shot</div>
+                    </div>
+                    <div class="shop-item-price" id="damagePrice">50g</div>
+                    <button onclick="buyUpgrade('damage')">Buy</button>
+                </div>
+                <div class="shop-item" data-index="1" data-upgrade="slow">
+                    <div class="shop-item-info">
+                        <div class="shop-item-name">Slow Field <span class="shop-item-key">[2]</span></div>
+                        <div class="shop-item-desc">Enemies move 15% slower</div>
+                    </div>
+                    <div class="shop-item-price" id="slowPrice">75g</div>
+                    <button onclick="buyUpgrade('slow')">Buy</button>
+                </div>
+                <div class="shop-item" data-index="2" data-upgrade="repair">
+                    <div class="shop-item-info">
+                        <div class="shop-item-name">Base Repair <span class="shop-item-key">[3]</span></div>
+                        <div class="shop-item-desc">Restore 30 HP to your base</div>
+                    </div>
+                    <div class="shop-item-price">40g</div>
+                    <button onclick="buyUpgrade('repair')">Buy</button>
+                </div>
+                <div class="shop-item" data-index="3" data-upgrade="gold">
+                    <div class="shop-item-info">
+                        <div class="shop-item-name">Gold Magnet <span class="shop-item-key">[4]</span></div>
+                        <div class="shop-item-desc">+50% gold from kills</div>
+                    </div>
+                    <div class="shop-item-price" id="goldPrice">60g</div>
+                    <button onclick="buyUpgrade('gold')">Buy</button>
+                </div>
+            </div>
+            <button class="continue-btn" onclick="continueToNextWave()">Continue to Next Wave <span class="shop-item-key">[TAB → ENTER]</span></button>
+        </div>
+
+        <!-- Game Over -->
+        <div class="game-over hidden" id="gameOver">
+            <h2>BASE DESTROYED</h2>
+            <div class="game-over-stats">
+                <div class="game-over-stat">
+                    <div class="game-over-stat-label">Waves Survived</div>
+                    <div class="game-over-stat-value" id="finalWave">0</div>
+                </div>
+                <div class="game-over-stat">
+                    <div class="game-over-stat-label">Final Score</div>
+                    <div class="game-over-stat-value" id="finalScore">0</div>
+                </div>
+            </div>
+            <button onclick="restartGame()">Play Again</button>
+        </div>
+    </div>
+
+    <footer>Built in public · Vibecoded · MVP</footer>
+
+    <!-- Embedded words data (fallback for file:// protocol) -->
+    <script type="application/json" id="embedded-words">
+    {
+      "easy": ["aim", "arm", "ace", "art", "air", "add", "aid", "age", "all", "ask", "ban", "bat", "box", "bug", "bit", "bay", "bet", "bot", "bus", "bad", "cap", "car", "cat", "cry", "cut", "cop", "cam", "can", "col", "cpu", "day", "die", "dig", "dam", "dos", "doc", "dev", "dex", "dim", "dot", "end", "ear", "eat", "eve", "egg", "elf", "ego", "era", "eye", "evo", "fan", "far", "fax", "fee", "few", "fix", "fly", "fog", "foe", "fox", "gas", "gap", "gun", "get", "god", "gym", "gem", "got", "gig", "geo", "hit", "hot", "hub", "hex", "hog", "hat", "hop", "hue", "ham", "hut", "ice", "ink", "ion", "ill", "imp", "ivy", "iso", "ids", "irq", "ips", "jam", "jaw", "jet", "joy", "jab", "jog", "jug", "jot", "jiv", "jax", "key", "kit", "kin", "ken", "keg", "koi", "kai", "kix", "kos", "kid", "lab", "lag", "law", "led", "leg", "log", "lot", "low", "lux", "lan", "mad", "map", "max", "mix", "mod", "mob", "mud", "mac", "mux", "men", "net", "new", "nod", "nor", "now", "nap", "nix", "nav", "npc", "neo", "oak", "odd", "oil", "one", "opt", "orb", "out", "old", "ops", "ova", "pad", "pan", "pay", "peg", "pen", "pet", "pic", "pig", "pin", "pit", "ram", "rat", "raw", "ray", "red", "rep", "rig", "rim", "rob", "rod", "sad", "sap", "saw", "say", "sea", "set", "shy", "sin", "sir", "sit", "tab", "tag", "tap", "tar", "tax", "tcp", "tea", "ten", "tip", "top", "usb", "url", "use", "udp", "uno", "urn", "ult", "ups", "ums", "uzi", "van", "vat", "via", "vim", "vip", "von", "vox", "var", "vet", "vis", "war", "way", "web", "who", "why", "win", "wit", "wow", "wax", "wig", "xml", "xor", "ray", "yen", "yes", "yet", "you", "yaw", "yup", "yak", "zen", "zip", "zoo", "zap", "zero", "zone", "zoom", "zeal", "zeta", "zinc", "fire", "fast", "fuel", "fail", "fall", "fear", "feel", "fend", "file", "fill", "find", "firm", "fish", "fist", "five", "flag", "flip", "flow", "flux", "foam", "fold", "fork", "form", "fort", "four", "free", "from", "fuel", "full", "fuse", "gain", "game", "gate", "gave", "gear", "giga", "give", "glad", "glow", "goal", "gold", "gone", "good", "goto", "grab", "gray", "grew", "grid", "grim", "grip", "grow", "gulf", "hack", "hail", "half", "hall", "halt", "hand", "hang", "hard", "harm", "hash", "hate", "have", "hawk", "haze", "head", "heal", "heap", "hear", "heat", "heel", "held", "helm", "help", "hero", "hide", "high", "hill", "hint", "hire", "hold", "hole", "home", "hood", "hook", "hope", "horn", "host", "hour", "huge", "hull", "hunt", "hurt", "icon", "idea", "idle", "info", "init", "iron", "item", "jack", "jail", "java", "jazz", "join", "joke", "jump", "june", "junk", "jury", "just", "keep", "kern", "kick", "kill", "kind", "king", "kiss", "kite", "knee", "knew", "know", "lack", "lady", "laid", "lake", "lamb", "land", "lane", "last", "late", "lead", "leaf", "lean", "leap", "left", "lens", "less", "liar", "life", "lift", "like", "limb", "line", "link", "lion", "list", "live", "load", "loan", "lock", "loft", "logo", "long", "look", "loop", "lord", "lose", "loss", "lost", "loud", "love", "luck", "made", "mage", "mail", "main", "make", "male", "mall", "many", "mark", "mars", "mask", "mass", "math", "maya", "maze", "meal", "mean", "meat", "meet", "melt", "memo", "menu", "mere", "mesh", "meta", "mica", "mice", "mild", "mile", "milk", "mill", "mind", "mine", "mint", "miss", "mist", "mode", "mold", "moon", "more", "moss", "most", "move", "much", "mute", "myth", "nail", "name", "navy", "near", "neat", "neck", "need", "neon", "nest", "news", "next", "nice", "nine", "node", "none", "noon", "norm", "nose", "note", "nova", "null", "oath", "obey", "omega", "once", "only", "onto", "open", "oral", "orca", "oven", "over", "pace", "pack", "page", "paid", "pain", "pair", "pale", "palm", "pane", "park", "part", "pass", "past", "path", "peak", "peer", "ping", "pink", "pipe", "plan", "play", "plot", "plug", "plus", "poem", "poet", "pole", "poll", "pond", "pool", "poor", "port", "pose", "post", "pour", "pray", "prev", "prey", "pull", "pure", "push", "quad", "quit", "quiz", "race", "rack", "rage", "raid", "rail", "rain", "rake", "rang", "rank", "rare", "rate", "read", "real", "reap", "rear", "redo", "reed", "reel", "rest", "rice", "rich", "ride", "ring", "rise", "risk", "road", "roam", "roar", "rock", "role", "roll", "roof", "room", "root", "rope", "rose", "ruin", "rule", "rush", "rust", "safe", "saga", "sage", "said", "sail", "sake", "sale", "salt", "same", "sand", "sane", "sang", "save", "scan", "scar", "seal", "seam", "seat", "seed", "seek", "seem", "seen", "self", "sell", "send", "sent", "sept", "shot", "show", "shut", "sick", "side", "sign", "silk", "sing", "sink", "site", "size", "skip", "slam", "slay", "slip", "slot", "slow", "snap", "snow", "soap", "soar", "sock", "soft", "soil", "sold", "sole", "solo", "some", "song", "soon", "sort", "soul", "span", "spar", "spec", "spin", "spot", "stab", "stay", "stem", "step", "stir", "stop", "stub", "such", "suit", "sure", "surf", "swap", "sync", "tabs", "tail", "take", "tale", "talk", "tall", "tame", "tank", "tape", "task", "team", "tear", "tech", "tell", "temp", "tend", "term", "test", "text", "than", "that", "them", "then", "they", "thin", "this", "tide", "tier", "tile", "till", "tilt", "time", "tiny", "tire", "toad", "toast", "told", "toll", "tomb", "tone", "tony", "took", "tool", "torn", "toss", "tour", "town", "trap", "tray", "tree", "trek", "trim", "trip", "true", "tube", "tune", "turn", "twin", "type", "undo", "unit", "unto", "upon", "used", "user", "vain", "vast", "veil", "vein", "very", "vest", "veto", "vice", "view", "void", "volt", "vote", "wade", "wage", "wait", "wake", "walk", "wall", "wand", "want", "ward", "warm", "warn", "warp", "wash", "wave", "weak", "wear", "weed", "week", "well", "went", "were", "west", "what", "when", "whip", "wide", "wife", "wild", "will", "wind", "wine", "wing", "wipe", "wire", "wise", "wish", "with", "wolf", "wood", "wool", "word", "wore", "work", "worm", "worn", "wrap", "yard", "yarn", "yeah", "year", "yell", "your", "zeal", "zest"],
+      "medium": ["ability", "access", "account", "action", "active", "actual", "adapt", "admin", "advance", "affect", "afraid", "agency", "agenda", "agent", "agile", "agreed", "airlock", "alarm", "alert", "algo", "alien", "align", "alive", "alloy", "almost", "alone", "alpha", "alter", "always", "ambush", "amount", "analog", "anchor", "android", "angel", "anger", "angle", "animal", "answer", "anthem", "anyone", "anyway", "apache", "appeal", "appear", "apple", "apply", "arcade", "archer", "arctic", "arena", "argue", "armor", "army", "around", "arrest", "arrive", "arrow", "artist", "ascend", "aspect", "assert", "assess", "assign", "assist", "assume", "assure", "attach", "attack", "attend", "author", "autumn", "avatar", "avenue", "avoid", "awaken", "backup", "badge", "balance", "ballad", "banana", "banner", "barrel", "barrier", "basket", "battle", "beacon", "bearer", "become", "before", "behalf", "behave", "behind", "belief", "belong", "below", "benefit", "beside", "better", "between", "beyond", "binary", "bishop", "bitmap", "bitter", "blanket", "blazer", "blink", "block", "bloody", "blossom", "blunt", "board", "boiler", "bomber", "bonus", "border", "boring", "borrow", "bottle", "bottom", "bounce", "bound", "branch", "brand", "brave", "breach", "break", "breath", "breeze", "brick", "bridge", "brief", "bright", "bring", "broken", "bronze", "brook", "brother", "brought", "brown", "browse", "brutal", "bubble", "bucket", "budget", "buffer", "build", "bullet", "bundle", "burden", "bureau", "buried", "button", "bypass", "cable", "cache", "cadet", "cage", "caliber", "camera", "camp", "campus", "canal", "cancel", "cancer", "candle", "cannon", "canvas", "canyon", "capable", "capacity", "capital", "captain", "capture", "carbon", "career", "careful", "cargo", "carpet", "carrier", "carry", "cartel", "castle", "casual", "catalog", "catch", "cathedral", "cause", "caution", "cavity", "center", "central", "century", "ceramic", "certain", "chain", "chair", "challenge", "chamber", "champion", "chance", "change", "channel", "chaos", "chapter", "character", "charge", "charity", "charm", "chart", "chase", "cheap", "cheat", "check", "cheese", "chemical", "cherry", "chest", "chicken", "chief", "choice", "choose", "chosen", "chrome", "chunk", "church", "cipher", "circle", "circuit", "citizen", "civil", "claim", "class", "classic", "clean", "clear", "click", "client", "cliff", "climate", "climb", "clinic", "clock", "clone", "close", "closer", "closet", "cloth", "cloud", "clover", "cluster", "coach", "coast", "cobra", "cocaine", "code", "codec", "coffee", "coin", "cold", "collar", "collect", "college", "colony", "color", "column", "combat", "combine", "comedy", "comfort", "comic", "coming", "command", "comment", "commit", "common", "compact", "company", "compare", "compass", "compete", "compile", "complex", "comply", "compose", "compound", "compress", "compute", "concept", "concern", "concert", "conclude", "concrete", "condemn", "conduct", "cone", "confess", "confirm", "conflict", "conform", "confuse", "congress", "connect", "conquer", "consent", "conserve", "consider", "consist", "console", "constant", "construct", "consult", "consume", "contact", "contain", "content", "contest", "context", "continue", "contract", "contrast", "control", "convert", "convict", "convince", "cookie", "copper", "coral", "core", "corner", "correct", "corrupt", "cosmic", "cotton", "council", "count", "counter", "country", "county", "couple", "courage", "course", "court", "cousin", "cover", "covert", "crack", "craft", "crash", "crater", "crazy", "create", "creature", "credit", "creek", "crew", "crime", "criminal", "crisis", "critic", "critical", "crop", "cross", "crowd", "crown", "crude", "cruel", "cruise", "crush", "crystal", "culture", "curious", "current", "cursor", "curtain", "curve", "custom", "cyber", "cycle", "cypher", "damage", "danger", "daring", "darker", "darkness", "database", "datum", "daughter", "deadly", "dealer", "death", "debate", "debris", "debug", "decade", "decay", "decent", "decide", "decimal", "deck", "declare", "decline", "decode", "decoy", "decrease", "dedicate", "deduct", "defeat", "defect", "defend", "defense", "defer", "deficit", "define", "deflect", "degree", "delay", "delete", "deliver", "delta", "demand", "demon", "deny", "depart", "depend", "depict", "deploy", "deposit", "depth", "deputy", "derive", "descend", "describe", "desert", "deserve", "design", "desire", "desktop", "despair", "despise", "despite", "destroy", "detail", "detect", "determine", "develop", "device", "devote", "diagram", "dialog", "diamond", "diary", "dictate", "diesel", "differ", "digital", "dignity", "dilemma", "dilute", "dinner", "direct", "disable", "disagree", "disarm", "disaster", "discard", "discern", "discord", "discount", "discover", "discuss", "disease", "disgrace", "disguise", "dismiss", "disorder", "dispatch", "dispel", "display", "dispose", "dispute", "disrupt", "dissent", "distance", "distant", "distinct", "distort", "distract", "district", "disturb", "diverse", "divide", "divine", "division", "divorce", "doctor", "doctrine", "document", "domain", "domestic", "dominant", "dominate", "donate", "donkey", "donor", "doom", "doorway", "dormant", "dosage", "double", "doubt", "downtown", "dozen", "draft", "dragon", "drain", "drama", "drastic", "drawer", "drawing", "dream", "dress", "drift", "drill", "drink", "drive", "driven", "driver", "drop", "drought", "drown", "drug", "drum", "drunk", "dual", "duchess", "during", "dust", "duty", "dwarf", "dwell", "dynamic", "dynasty", "eager", "eagle", "early", "earn", "earth", "eastern", "easy", "echo", "eclipse", "ecology", "economy", "edge", "edit", "edition", "editor", "educate", "effect", "effort", "eight", "either", "eject", "elaborate", "elastic", "elbow", "elder", "elect", "electric", "electron", "elegant", "element", "elevate", "eleven", "elite", "embassy", "embrace", "emerge", "emotion", "emperor", "empire", "employ", "empty", "enable", "enact", "enclose", "encode", "encounter", "encourage", "ending", "endless", "endorse", "endure", "enemy", "energy", "enforce", "engage", "engine", "enhance", "enjoy", "enlist", "enormous", "enough", "enrage", "enrich", "enroll", "ensure", "enter", "entire", "entitle", "entity", "entrance", "entry", "envelope", "envoy", "enzyme", "epic", "episode", "equal", "equip", "equity", "era", "erode", "error", "erupt", "escape", "escort", "essay", "essence", "estate", "esteem", "estimate", "eternal", "ethic", "ethics", "ethnic", "evade", "evaluate", "evening", "event", "eventual", "ever", "every", "evidence", "evil", "evoke", "evolve", "exact", "examine", "example", "exceed", "excel", "except", "excess", "exchange", "exclude", "excuse", "execute", "exempt", "exercise", "exhaust", "exhibit", "exile", "exist", "exit", "exotic", "expand", "expect", "expel", "expense", "expert", "expire", "explain", "explode", "exploit", "explore", "export", "expose", "express", "extend", "extent", "external", "extinct", "extra", "extract", "extreme", "fabric", "facade", "facial", "facility", "factor", "factory", "faculty", "faded", "failure", "faint", "fairly", "fairy", "faith", "fallen", "false", "familiar", "family", "famine", "famous", "fancy", "fantasy", "farmer", "fashion", "fatal", "father", "fatigue", "fault", "favor", "feature", "federal", "feedback", "fellow", "female", "fence", "ferry", "fertile", "fervor", "festival", "fetch", "feudal", "fever", "fiber", "fiction", "fiddle", "field", "fierce", "fiery", "fifteen", "fifty", "fighter", "figure", "filament", "filename", "filter", "filth", "final", "finance", "finding", "finish", "finite", "firewall", "fiscal", "fisher", "fitness", "fixed", "fixture", "flame", "flank", "flash", "fleet", "flesh", "flight", "float", "flock", "flood", "floor", "floral", "flour", "flower", "fluid", "flush", "flutter", "focal", "focus", "folder", "follow", "foolish", "football", "forbid", "force", "forecast", "foreign", "forest", "forever", "forget", "forgive", "forgot", "formal", "format", "former", "formula", "forsake", "fortress", "fortune", "forty", "forum", "forward", "fossil", "foster", "fought", "foul", "found", "founder", "fountain", "fourth", "fractal", "fragment", "frail", "frame", "framework", "frank", "fraud", "freak", "freedom", "freeze", "freight", "french", "frequency", "frequent", "fresh", "friction", "friday", "friend", "frighten", "fringe", "front", "frontier", "frozen", "fruit", "frustrate", "fulfill", "function", "fund", "funeral", "fungus", "funnel", "funny", "furnace", "furnish", "further", "fusion", "future", "galaxy", "gallery", "gallon", "gamble", "gamma", "gang", "garage", "garbage", "garden", "garlic", "garment", "gasoline", "gather", "gauge", "gauntlet", "general", "generate", "generic", "generous", "genetic", "genius", "genre", "gentle", "genuine", "gesture", "ghost", "giant", "gifted", "giggle", "ginger", "given", "glacier", "gladly", "glamour", "glance", "gland", "glare", "glass", "gleam", "glimpse", "glitch", "global", "globe", "gloom", "glorious", "glory", "glove", "glowing", "glucose", "glutton", "gnome", "goblin", "goddess", "golden", "goodness", "gospel", "gossip", "govern", "governor", "grace", "gradual", "grain", "grand", "granite", "grant", "graph", "graphic", "grasp", "grass", "grateful", "grave", "gravel", "gravity", "grease", "great", "greater", "greatly", "greed", "greedy", "green"],
+      "hard": ["abandoned", "abolish", "abortion", "abrasive", "absolute", "absorb", "abstract", "absurd", "abundance", "abundant", "academic", "academy", "accelerate", "accent", "acceptable", "acceptance", "accessible", "accident", "acclaim", "accompany", "accomplish", "accordance", "according", "account", "accurate", "accuse", "achieve", "acknowledge", "acoustic", "acquire", "activate", "activist", "activity", "actually", "adaptive", "addition", "adequate", "adjacent", "adjective", "adjust", "admission", "adolescent", "adoption", "advanced", "advantage", "adventure", "adversary", "adverse", "advertise", "advisory", "advocate", "aesthetic", "affected", "affection", "affiliate", "affirm", "afflict", "affluent", "affordable", "aftermath", "afternoon", "afterward", "against", "agency", "aggregate", "aggression", "aggressive", "agitated", "agony", "agreement", "agriculture", "aircraft", "airfield", "airplane", "airport", "airship", "airspace", "airstrip", "airtight", "aisle", "alarming", "alchemy", "alcohol", "alcoholic", "algorithm", "alienate", "alignment", "allegiance", "allegedly", "allergic", "alleviate", "alliance", "allocate", "allowance", "allusion", "alongside", "alphabet", "alternate", "alternative", "although", "altitude", "aluminum", "amateur", "amazing", "amazingly", "ambiguity", "ambiguous", "ambition", "ambitious", "ambulance", "amendment", "amenity", "ammunition", "amnesty", "amplifier", "amplify", "analogous", "analysis", "analytical", "analyze", "anarchy", "ancestor", "ancestry", "ancient", "android", "anecdote", "animated", "animation", "animosity", "annihilate", "anniversary", "announce", "annoyance", "annually", "anomaly", "anonymous", "another", "answering", "antagonist", "antarctic", "antenna", "anthem", "anthology", "anticipate", "antidote", "antiquity", "anxiety", "anxious", "anybody", "anymore", "anything", "anytime", "anywhere", "apartment", "apathetic", "apathy", "aperture", "apex", "apologize", "apology", "apostle", "apparatus", "apparent", "apparently", "appeal", "appearance", "appetite", "applaud", "appliance", "applicable", "applicant", "application", "appoint", "appointment", "appraisal", "appreciate", "appreciation", "approach", "appropriate", "approval", "approximate", "arbitrary", "arbitration", "arcade", "archaeologist", "architect", "architecture", "archive", "arctic", "arguably", "argument", "armament", "armistice", "armored", "armory", "aromatic", "arousal", "arrange", "arrangement", "array", "arrest", "arrival", "arrogance", "arrogant", "arsenal", "arson", "arterial", "artery", "article", "articulate", "artifact", "artificial", "artillery", "artistic", "artwork", "ascend", "ascension", "ashamed", "ashore", "asian", "aside", "asleep", "aspect", "aspiration", "aspire", "assassin", "assassinate", "assault", "assemble", "assembly", "assertion", "assessment", "assignment", "assimilate", "assistance", "assistant", "associate", "association", "assume", "assumption", "assurance", "asteroid", "astonish", "astray", "astrology", "astronaut", "astronomy", "asymmetric", "athletic", "atlas", "atmosphere", "atmospheric", "atomic", "atrocity", "attachment", "attain", "attempt", "attendance", "attendant", "attention", "attitude", "attorney", "attract", "attraction", "attractive", "attribute", "attrition", "auction", "audible", "audience", "audio", "audit", "audition", "augment", "august", "authentic", "authentication", "author", "authority", "authorization", "authorize", "automated", "automatic", "automation", "automobile", "autonomous", "autonomy", "autopsy", "autumn", "auxiliary", "available", "avalanche", "avenue", "average", "aversion", "aviation", "aviator", "avocado", "avoidance", "awaken", "awakening", "awareness", "awesome", "awful", "awkward", "bachelor", "backbone", "backdrop", "backend", "background", "backpack", "backup", "backward", "bacteria", "bacterial", "balance", "balanced", "balcony", "ballistic", "balloon", "ballot", "bamboo", "banana", "bandage", "bandwidth", "banish", "bankrupt", "bankruptcy", "banner", "banquet", "baptism", "barbarian", "barbaric", "barbecue", "barber", "barefoot", "bargain", "baroque", "barracks", "barrage", "barrel", "barren", "barricade", "barrier", "barstool", "bartender", "baseball", "baseline", "basement", "basic", "basically", "basin", "basis", "basket", "basketball", "battery", "battle", "battlefield", "battleship", "beacon", "bearing", "beast", "beautiful", "beauty", "became", "because", "become", "becoming", "bedroom", "before", "beforehand", "began", "beginner", "beginning", "behalf", "behavior", "behavioral", "behind", "being", "belief", "believe", "believer", "belittle", "belong", "beloved", "below", "benchmark", "beneath", "benefactor", "beneficial", "benefit", "benevolent", "beside", "besides", "besiege", "best", "bestow", "betray", "betrayal", "better", "between", "beverage", "beware", "beyond", "biased", "bicycle", "bilateral", "billboard", "billion", "binary", "binding", "biochemical", "biodiversity", "biographer", "biography", "biological", "biology", "biometric", "biotech", "biotechnology", "bipolar", "birthday", "bishop", "bitterness", "bizarre", "blackmail", "blackout", "bladder", "blade", "blameless", "blanket", "blast", "blatant", "blazing", "bleach", "bleak", "bleeding", "blemish", "blessing", "blinded", "blindness", "blinking", "blissful", "blister", "blitz", "blizzard", "blockade", "blockage", "blockchain", "bloodshed", "bloodstream", "bloody", "blossom", "blueprint", "bluffing", "blunder", "blurred", "board", "boastful", "bodyguard", "bogus", "boiler", "boiling", "bold", "boldness", "bolster", "bolt", "bombardment", "bomber", "bombing", "bondage", "bonding", "bonus", "bookmark", "booster", "bootstrap", "border", "borderline", "boredom", "boring", "borough", "borrow", "botanical", "bother", "bottle", "bottleneck", "bottom", "boulevard", "bounce", "boundary", "boundless", "bounty", "bouquet", "bourgeois", "bracket", "brain", "brainstorm", "brainwash", "brake", "branch", "brand", "branding", "brass", "bravery", "breach", "breakdown", "breakfast", "breaking", "breakthrough", "breath", "breathe", "breathing", "breathtaking", "breed", "breeding", "breeze", "brewery", "bribery", "brick", "bridal", "bridge", "briefing", "briefly", "brigade", "bright", "brighten", "brightness", "brilliance", "brilliant", "bring", "brink", "brisk", "bristle", "brittle", "broad", "broadcast", "broaden", "broadly", "broadway", "brochure", "broke", "broken", "broker", "bronze", "brotherhood", "brought", "browse", "browser", "brutal", "brutality", "bubble", "bucket", "buckle", "budget", "buffer", "buffet", "building", "buildup", "built", "bulging", "bulk", "bullet", "bulletin", "bullying", "bumper", "bundle", "bunker", "buoyant", "burden", "bureau", "bureaucracy", "bureaucrat", "burglar", "burglary", "burial", "buried", "burning", "burnout", "burst", "business", "businessman", "butterfly", "button", "buyer", "bypass", "bystander", "cabinet", "cable", "cache", "cactus", "cadet", "cadre", "cafeteria", "caffeine", "cage", "calculate", "calculation", "calculator", "calendar", "caliber", "calibrate", "calm", "camouflage", "campaign", "campus", "canal", "cancel", "cancellation", "cancer", "candidate", "candle", "candor", "cannabis", "cannibal", "cannon", "cannot", "canopy", "canvas", "canyon", "capability", "capable", "capacity", "capital", "capitalism", "capitol", "captain", "captive", "captivity", "capture", "caravan", "carbon", "carburetor"],
+      "boss": ["abandonment", "abbreviation", "abdication", "abolitionist", "abomination", "aboriginal", "absenteeism", "absolutism", "absorption", "abstention", "abstinence", "abstractness", "absurdity", "acceleration", "acceptability", "accessibility", "accidental", "acclamation", "acclimation", "accommodation", "accompaniment", "accomplice", "accomplishment", "accountability", "accountable", "accumulation", "accumulator", "accusation", "achievement", "acknowledge", "acknowledgment", "acquisition", "acquittal", "acrimonious", "activation", "activism", "actualization", "acupuncture", "adaptability", "adaptation", "additionally", "addressable", "adequately", "adjacency", "adjournment", "adjustable", "adjustment", "administered", "administration", "administrator", "admiration", "admirable", "admissibility", "admittance", "adolescence", "adorable", "advancement", "advantageous", "adventurous", "adversarial", "adversity", "advertisement", "advertising", "advisable", "affectation", "affiliation", "affirmation", "affirmative", "affliction", "affordability", "affordable", "aficionado", "aftereffect", "afternoon", "afterthought", "aggravation", "aggregation", "aggression", "aggressively", "aggressiveness", "agitation", "agricultural", "agriculture", "alignment", "allegations", "allegiance", "alleviation", "allocation", "alphabetical", "alternative", "alternatively", "altruistic", "amalgamation", "ambassador", "ambiguity", "ambiguous", "ambitiously", "amelioration", "amenability", "amendment", "amiability", "ammunition", "amplification", "amusement", "anachronism", "analogical", "analogously", "analytical", "analyzable", "anarchist", "anarchy", "anatomical", "ancestral", "ancillary", "android", "anecdotal", "anesthesia", "angelic", "angrily", "anguished", "animated", "animation", "annihilation", "anniversary", "announcement", "annoyance", "annually", "annulment", "anomalous", "anonymity", "anonymous", "antagonism", "antagonist", "antagonistic", "antagonize", "antecedent", "anterior", "anthology", "anthropology", "antibiotic", "anticipation", "anticlimax", "antidote", "antimatter", "antiquated", "antiquity", "antisocial", "antithesis", "anxiety", "anxiously", "apartment", "apathetic", "apocalypse", "apocalyptic", "apologetic", "apologist", "apostrophe", "apparatus", "apparently", "apparition", "appearance", "appeasement", "appendix", "appetite", "applause", "appliance", "applicability", "applicable", "application", "appointment", "apportionment", "appraisal", "appreciable", "appreciation", "appreciative", "apprehend", "apprehension", "apprehensive", "apprentice", "apprenticeship", "approachable", "appropriate", "appropriately", "appropriation", "approval", "approximate", "approximately", "approximation", "arbitrary", "arbitrarily", "arbitration", "arbitrator", "archaeological", "archaeologist", "archaeology", "archaic", "archbishop", "archeology", "archetypal", "archetype", "archipelago", "architect", "architectural", "architecture", "archive", "aristocracy", "aristocrat", "aristocratic", "arithmetic", "armament", "armistice", "arrangement", "arrogance", "arrogant", "articulate", "articulation", "artifact", "artificial", "artificially", "artillery", "artisan", "artistic", "ascendancy", "ascension", "ascertain", "ashamed", "aspiration", "aspiring", "assassination", "assassinate", "assault", "assemble", "assembly", "assertion", "assessment", "assignment", "assimilate", "assimilation", "assistance", "assistant", "association", "assortment", "assumption", "assurance", "asterisk", "asteroid", "astonish", "astonishing", "astonishment", "astounding", "astray", "astrology", "astronaut", "astronomer", "astronomical", "astronomy", "astute", "asymmetric", "asymmetrical", "atheist", "athlete", "athletic", "athletics", "atlas", "atmosphere", "atmospheric", "atomic", "atrocious", "atrocity", "attachment", "attainment", "attempt", "attendance", "attendant", "attention", "attentive", "attenuate", "attestation", "attitude", "attorney", "attraction", "attractive", "attractiveness", "attribute", "attribution", "attrition", "auctioneer", "audacious", "audacity", "audible", "audience", "audition", "auditorium", "augmentation", "auspicious", "austere", "austerity", "authentic", "authenticity", "authentication", "authoritarian", "authoritative", "authority", "authorization", "autobiography", "autocracy", "autocrat", "autocratic", "automated", "automatic", "automatically", "automation", "automobile", "autonomous", "autonomy", "autopsy", "auxiliary", "availability", "available", "avalanche", "avenue", "average", "aversion", "aviation", "avocado", "avoidable", "avoidance", "awakening", "awareness", "awestruck", "awfully", "awkward", "awkwardness", "axiomatic", "bachelor", "backlash", "backward", "bacteria", "bacterial", "bacterium", "balancing", "balcony", "ballistic", "balloon", "ballot", "bamboo", "bandwidth", "banishment", "bankruptcy", "banquet", "baptism", "barbarian", "barbaric", "barbarism", "barbarity", "barbecue", "barometer", "barracks", "barrage", "barren", "barricade", "barrier", "bartender", "baseball", "baseline", "basement", "basically", "basketball", "battalion", "battery", "battlefield", "battleground", "battleship", "beautiful", "beautify", "because", "becoming", "beforehand", "beginning", "behavioral", "beheading", "beholder", "believable", "believer", "belittle", "belligerent", "bellwether", "benchmark", "beneath", "benefactor", "beneficial", "beneficiary", "benefit", "benevolence", "benevolent", "benign", "bereavement", "besiege", "betrayal", "beverage", "bewildered", "bewilderment", "biblical", "bibliography", "bicameral", "bicycle", "bilateral", "billboard", "billionaire", "binding", "biochemical", "biochemistry", "biodegradable", "biodiversity", "biographer", "biographical", "biography", "biological", "biologist", "biology", "biometric", "bipartisan", "birthplace", "birthright", "bitterness", "bittersweet", "blackmail", "blacksmith", "blameless", "blanket", "blasphemy", "blatant", "blatantly", "bleaching", "bleeding", "blemish", "blessing", "blighted", "blindness", "blissful", "blissfully", "blitzkrieg", "blizzard", "blockade", "blockage", "blockchain", "bloodshed", "bloodstream", "blueprint", "bluntness", "blurred", "blurring", "boardroom", "boastful", "bodyguard", "boisterous", "boldness", "bolstering", "bombardment", "bonding", "bookkeeper", "bookmark", "bootstrap", "borderland", "borderline", "boredom", "botanical", "botanist", "botany", "bottleneck", "boulevard", "boundaries", "boundary", "boundless", "bountiful", "bourgeois", "bourgeoisie", "boutique", "boycott", "boyfriend", "bracket", "brainstorm", "brainwash", "brainwashing", "branding", "bravery", "breadwinner", "breakdown", "breakfast", "breakthrough", "breakup", "breathless", "breathtaking", "breeding", "brewery", "bribery", "brickwork", "bridal", "bridegroom", "bridesmaid", "briefcase", "briefing", "briefly", "brigade", "brighten", "brightness", "brilliance", "brilliant", "brinkmanship", "bristling", "brittle", "broadcast", "broadcaster", "broadcasting", "broaden", "broadly", "brochure", "brotherhood", "browser", "browsing", "brutal", "brutality", "brutalize", "brutally", "bubble", "buddhism", "buddhist", "budgetary", "buffering", "builder", "building", "buildup", "bulletin", "bulletproof", "bullying", "bumper", "bundling", "bunker", "buoyancy", "buoyant", "burdensome", "bureau", "bureaucracy", "bureaucrat", "bureaucratic", "burglar", "burglary", "burial", "burnout", "bursting", "businessman", "businesswoman", "butterfly", "buttress", "bystander", "byzantine", "cabbage", "cabinet", "cable", "cactus", "cafeteria", "caffeine", "calamitous", "calamity", "calculate", "calculated", "calculating", "calculation", "calculator", "calendar", "caliber", "calibrate", "calibration", "calmness", "calorie", "camaraderie", "camouflage", "campaign", "campaigner", "campaigning", "campfire", "campground", "campus", "canadian", "canal", "cancellation", "cancer", "cancerous", "candidacy", "candidate", "candlelight", "candor", "cannabis", "cannibal", "cannibalism", "cannon", "cannot", "canonical", "canopy", "canvas"]
+    }
+    </script>
+
+    <script>
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // GAME STATE
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+        const state = {
+            // Base
+            baseHP: 100,
+            maxBaseHP: 100,
+
+            // Resources
+            gold: 0,
+            score: 0,
+
+            // Wave
+            wave: 1,
+            enemies: [],
+            enemyIdCounter: 0,
+
+            // Upgrades
+            damageMultiplier: 1,
+            slowMultiplier: 1,
+            goldMultiplier: 1,
+            damageUpgrades: 0,
+            slowUpgrades: 0,
+            goldUpgrades: 0,
+
+            // Game state
+            isPlaying: false,
+            isPaused: false,
+            gameLoopId: null,
+            waveSpawning: false,
+
+            // Typing
+            currentInput: '',
+
+            // Combo system
+            combo: 0,
+            lastKillTime: null,
+            hasTypingError: false,
+            comboTimeoutId: null,
+
+            // Speed system
+            wordStartTime: null,
+            currentWordWPM: 0,
+
+            // Shop navigation
+            shopSelectedIndex: 0
+        };
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // WORD POOLS
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+        let wordPools = {
+            easy: ['run', 'hit', 'fire', 'stop', 'move', 'jump', 'fast', 'slow'],
+            medium: ['attack', 'defend', 'charge', 'strike', 'pierce', 'dodge', 'guard', 'storm'],
+            hard: ['assault', 'counter', 'eliminate', 'destroy', 'demolish', 'obliterate', 'barrage'],
+            boss: ['annihilation', 'devastation', 'overwhelming', 'unstoppable', 'catastrophic']
+        };
+
+        let wordsLoaded = false;
+
+        // Load words from JSON file
+        async function loadWords() {
+            const statusEl = document.getElementById('wordStatus');
+            try {
+                if (statusEl) statusEl.textContent = 'Loading words from JSON...';
+                const response = await fetch('words.json');
+                if (response.ok) {
+                    const data = await response.json();
+                    wordPools = data;
+                    wordsLoaded = true;
+                    const totalWords = Object.values(data).flat().length;
+                    console.log('✓ Loaded', totalWords, 'words from JSON');
+                    if (statusEl) statusEl.textContent = `✓ ${totalWords} words loaded from JSON`;
+                    if (statusEl) statusEl.style.color = '#00ffff';
+                    return true;
+                } else {
+                    throw new Error('Failed to fetch words.json');
+                }
+            } catch (error) {
+                console.warn('⚠ Could not load words.json:', error.message);
+                console.log('→ Attempting to load embedded words...');
+
+                // Try to load from embedded script tag
+                const embeddedWords = document.getElementById('embedded-words');
+                if (embeddedWords) {
+                    try {
+                        const data = JSON.parse(embeddedWords.textContent);
+                        wordPools = data;
+                        const totalWords = Object.values(data).flat().length;
+                        console.log('✓ Loaded', totalWords, 'words from embedded data');
+                        if (statusEl) statusEl.textContent = `✓ ${totalWords} words loaded (embedded)`;
+                        if (statusEl) statusEl.style.color = '#00ffff';
+                        wordsLoaded = true;
+                        return true;
+                    } catch (e) {
+                        console.error('Failed to parse embedded words:', e);
+                    }
+                }
+
+                // Fallback to default
+                console.log('→ Using default word pool (28 words)');
+                if (statusEl) statusEl.textContent = '⚠ Using default word pool (28 words)';
+                if (statusEl) statusEl.style.color = '#ffaa00';
+                wordsLoaded = true;
+                return false;
+            }
+        }
+
+        // Load words on page load
+        loadWords();
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // DOM ELEMENTS
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+        const elements = {
+            arena: document.getElementById('arena'),
+            inputField: document.getElementById('inputField'),
+            startScreen: document.getElementById('startScreen'),
+            shop: document.getElementById('shop'),
+            gameOver: document.getElementById('gameOver'),
+            waveAnnounce: document.getElementById('waveAnnounce'),
+
+            baseHP: document.getElementById('baseHP'),
+            wave: document.getElementById('wave'),
+            gold: document.getElementById('gold'),
+            score: document.getElementById('score'),
+            combo: document.getElementById('combo'),
+            comboAnnouncement: document.getElementById('comboAnnouncement'),
+
+            finalWave: document.getElementById('finalWave'),
+            finalScore: document.getElementById('finalScore')
+        };
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // GAME LOGIC
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+        async function startGame() {
+            // Wait for words to load if not already loaded
+            if (!wordsLoaded) {
+                console.log('Waiting for words to load...');
+                await loadWords();
+            }
+
+            // Reset state
+            state.baseHP = state.maxBaseHP;
+            state.gold = 0;
+            state.score = 0;
+            state.wave = 1;
+            state.enemies = [];
+            state.damageMultiplier = 1;
+            state.slowMultiplier = 1;
+            state.goldMultiplier = 1;
+            state.damageUpgrades = 0;
+            state.slowUpgrades = 0;
+            state.goldUpgrades = 0;
+            state.isPlaying = true;
+            state.isPaused = false;
+
+            // Reset combo
+            state.combo = 0;
+            state.lastKillTime = null;
+            state.hasTypingError = false;
+            if (state.comboTimeoutId) {
+                clearTimeout(state.comboTimeoutId);
+                state.comboTimeoutId = null;
+            }
+
+            // Reset speed tracking
+            state.wordStartTime = null;
+            state.currentWordWPM = 0;
+
+            // Clear arena
+            const enemies = document.querySelectorAll('.enemy');
+            enemies.forEach(e => e.remove());
+
+            // Hide start screen
+            elements.startScreen.classList.add('hidden');
+            elements.gameOver.classList.add('hidden');
+
+            // Focus input
+            elements.inputField.value = '';
+            elements.inputField.focus();
+
+            // Update UI
+            updateHUD();
+
+            // Start first wave
+            startWave(1);
+
+            // Start game loop
+            gameLoop();
+        }
+
+        function startWave(waveNum) {
+            state.wave = waveNum;
+            state.waveSpawning = true;
+            updateHUD();
+
+            // Announce wave
+            elements.waveAnnounce.textContent = `Wave ${waveNum}`;
+            elements.waveAnnounce.classList.add('show');
+            setTimeout(() => {
+                elements.waveAnnounce.classList.remove('show');
+            }, 2000);
+
+            // Spawn enemies
+            const enemyCount = 3 + waveNum * 2;
+            const spawnDelay = Math.max(800, 2000 - waveNum * 50);
+
+            for (let i = 0; i < enemyCount; i++) {
+                setTimeout(() => {
+                    if (state.isPlaying && !state.isPaused) {
+                        spawnEnemy(waveNum);
+                    }
+                    // Mark spawning complete after last enemy
+                    if (i === enemyCount - 1) {
+                        state.waveSpawning = false;
+                    }
+                }, i * spawnDelay);
+            }
+        }
+
+        function spawnEnemy(waveNum) {
+            // Determine enemy type based on wave
+            let type = 'normal';
+            let word = '';
+            let hp = 1;
+            let speed = 0.5;
+            let goldValue = 10;
+
+            const rand = Math.random();
+
+            if (waveNum >= 5 && rand < 0.2) {
+                type = 'tank';
+                word = wordPools.hard[Math.floor(Math.random() * wordPools.hard.length)];
+                hp = 3;
+                speed = 0.3;
+                goldValue = 30;
+            } else if (waveNum >= 3 && rand < 0.4) {
+                type = 'fast';
+                word = wordPools.medium[Math.floor(Math.random() * wordPools.medium.length)];
+                hp = 1;
+                speed = 0.8;
+                goldValue = 15;
+            } else {
+                type = 'normal';
+                if (waveNum >= 7) {
+                    word = wordPools.medium[Math.floor(Math.random() * wordPools.medium.length)];
+                } else {
+                    word = wordPools.easy[Math.floor(Math.random() * wordPools.easy.length)];
+                }
+                hp = 1;
+                speed = 0.5;
+                goldValue = 10;
+            }
+
+            // Apply slow upgrade
+            speed *= state.slowMultiplier;
+
+            const enemy = {
+                id: state.enemyIdCounter++,
+                word: word,
+                type: type,
+                hp: hp,
+                maxHp: hp,
+                speed: speed,
+                goldValue: goldValue,
+                y: 0,
+                x: Math.random() * (window.innerWidth - 100) + 50,
+                element: null,
+                typedChars: 0
+            };
+
+            // Create DOM element
+            const enemyEl = document.createElement('div');
+            enemyEl.className = 'enemy';
+            enemyEl.id = `enemy-${enemy.id}`;
+            enemyEl.style.left = enemy.x + 'px';
+            enemyEl.style.top = enemy.y + 'px';
+
+            const shapeClass = type === 'fast' ? 'fast' : type === 'tank' ? 'tank' : '';
+            enemyEl.innerHTML = `
+                <div class="enemy-word">
+                    ${word.split('').map(c => `<span class="char">${c}</span>`).join('')}
+                </div>
+                <div class="enemy-shape ${shapeClass}">
+                    <div class="enemy-hp-bar">
+                        <div class="enemy-hp-fill" style="width: 100%"></div>
+                    </div>
+                </div>
+            `;
+
+            enemy.element = enemyEl;
+            elements.arena.appendChild(enemyEl);
+            state.enemies.push(enemy);
+        }
+
+        function gameLoop() {
+            if (!state.isPlaying) return;
+
+            // Move enemies
+            state.enemies.forEach(enemy => {
+                enemy.y += enemy.speed;
+                enemy.element.style.top = enemy.y + 'px';
+
+                // Check if reached base
+                const arenaHeight = elements.arena.clientHeight;
+                if (enemy.y >= arenaHeight - 80) {
+                    damageBase(enemy);
+                }
+            });
+
+            // Check if wave complete (only after all enemies have spawned)
+            if (state.enemies.length === 0 && !state.waveSpawning && state.isPlaying && !state.isPaused) {
+                waveComplete();
+            }
+
+            state.gameLoopId = requestAnimationFrame(gameLoop);
+        }
+
+        function handleInput(e) {
+            if (!state.isPlaying || state.isPaused) return;
+
+            const input = e.target.value.toLowerCase();
+            state.currentInput = input;
+
+            if (input === '') {
+                // Clear all typed indicators
+                state.enemies.forEach(enemy => {
+                    enemy.typedChars = 0;
+                    updateEnemyWord(enemy);
+                });
+                state.hasTypingError = false;
+                state.wordStartTime = null; // Reset speed timer
+                return;
+            }
+
+            // Start speed timer on first character
+            if (input.length === 1 && !state.wordStartTime) {
+                state.wordStartTime = Date.now();
+            }
+
+            // Find matching enemy
+            let matchedEnemy = null;
+
+            for (let enemy of state.enemies) {
+                if (enemy.word.toLowerCase().startsWith(input)) {
+                    matchedEnemy = enemy;
+                    break;
+                }
+            }
+
+            if (matchedEnemy) {
+                matchedEnemy.typedChars = input.length;
+                updateEnemyWord(matchedEnemy);
+
+                // Check if word complete
+                if (input === matchedEnemy.word.toLowerCase()) {
+                    const wasPerfect = !state.hasTypingError;
+
+                    // Calculate WPM for this word
+                    let wpm = 0;
+                    if (state.wordStartTime) {
+                        const timeElapsed = (Date.now() - state.wordStartTime) / 1000; // seconds
+                        const charactersTyped = input.length;
+                        const wordsTyped = charactersTyped / 5; // Standard: 5 chars = 1 word
+                        const minutes = timeElapsed / 60;
+                        wpm = Math.round(wordsTyped / minutes);
+                    }
+                    state.currentWordWPM = wpm;
+
+                    killEnemy(matchedEnemy, wasPerfect, wpm);
+                    elements.inputField.value = '';
+                    state.currentInput = '';
+                    state.hasTypingError = false;
+                    state.wordStartTime = null; // Reset timer
+                }
+            } else {
+                // No match - error feedback
+                if (!state.hasTypingError) {
+                    state.hasTypingError = true;
+                    breakCombo();
+                }
+                elements.inputField.classList.add('error');
+                setTimeout(() => elements.inputField.classList.remove('error'), 300);
+            }
+        }
+
+        function updateEnemyWord(enemy) {
+            const chars = enemy.element.querySelectorAll('.enemy-word .char');
+            chars.forEach((char, i) => {
+                if (i < enemy.typedChars) {
+                    char.classList.add('typed');
+                } else {
+                    char.classList.remove('typed');
+                }
+            });
+        }
+
+        function killEnemy(enemy, wasPerfect = false, wpm = 0) {
+            const damage = state.damageMultiplier;
+            enemy.hp -= damage;
+
+            // Calculate speed multiplier based on WPM
+            let speedMultiplier = 1;
+            let speedTier = '';
+            if (wpm >= 120) {
+                speedMultiplier = 3;
+                speedTier = 'godlike';
+            } else if (wpm >= 100) {
+                speedMultiplier = 2.5;
+                speedTier = 'lightning';
+            } else if (wpm >= 80) {
+                speedMultiplier = 2;
+                speedTier = 'blazing';
+            } else if (wpm >= 60) {
+                speedMultiplier = 1.5;
+                speedTier = 'fast';
+            } else if (wpm >= 40) {
+                speedMultiplier = 1.2;
+                speedTier = 'quick';
+            }
+
+            // Get enemy position for damage number
+            const rect = enemy.element.getBoundingClientRect();
+            const arenaRect = elements.arena.getBoundingClientRect();
+            const x = rect.left - arenaRect.left + rect.width / 2;
+            const y = rect.top - arenaRect.top;
+
+            if (enemy.hp <= 0) {
+                // Enemy destroyed
+                enemy.element.classList.add('hit');
+                setTimeout(() => {
+                    enemy.element.remove();
+                }, 200);
+
+                // Remove from array
+                state.enemies = state.enemies.filter(e => e.id !== enemy.id);
+
+                // Combo logic
+                const now = Date.now();
+                const timeSinceLastKill = state.lastKillTime ? now - state.lastKillTime : 999999;
+
+                if (wasPerfect && timeSinceLastKill < 3000) {
+                    // Increment combo
+                    state.combo++;
+                    state.lastKillTime = now;
+
+                    // Clear existing timeout
+                    if (state.comboTimeoutId) {
+                        clearTimeout(state.comboTimeoutId);
+                    }
+
+                    // Set new timeout
+                    state.comboTimeoutId = setTimeout(() => {
+                        breakCombo();
+                    }, 3000);
+
+                    // Show combo announcement
+                    showComboAnnouncement();
+                } else if (wasPerfect) {
+                    // First kill or restart combo
+                    state.combo = 1;
+                    state.lastKillTime = now;
+
+                    // Set timeout
+                    state.comboTimeoutId = setTimeout(() => {
+                        breakCombo();
+                    }, 3000);
+                } else {
+                    // Not perfect - break combo
+                    breakCombo();
+                }
+
+                // Calculate combo multiplier
+                const comboMultiplier = Math.min(1 + (state.combo - 1) * 0.5, 5); // Max 5x at combo 9+
+
+                // Calculate total multiplier (combo * speed)
+                const totalMultiplier = comboMultiplier * speedMultiplier;
+
+                // Reward with BOTH multipliers
+                const baseGold = enemy.goldValue * state.goldMultiplier;
+                const goldEarned = Math.round(baseGold * totalMultiplier);
+                state.gold += goldEarned;
+                state.score += enemy.goldValue * 10 * totalMultiplier;
+
+                // Show speed announcement if fast enough
+                if (speedTier === 'lightning' || speedTier === 'godlike') {
+                    showSpeedAnnouncement(speedTier, wpm);
+                }
+
+                // Spawn damage number
+                spawnDamageNumber(x, y, damage, wasPerfect, state.combo > 0, speedMultiplier, speedTier);
+
+                updateHUD();
+            } else {
+                // Damaged but not dead
+                enemy.element.classList.add('hit');
+                setTimeout(() => enemy.element.classList.remove('hit'), 200);
+
+                const hpPercent = (enemy.hp / enemy.maxHp) * 100;
+                const hpBar = enemy.element.querySelector('.enemy-hp-fill');
+                hpBar.style.width = hpPercent + '%';
+
+                // Spawn damage number
+                spawnDamageNumber(x, y, damage, wasPerfect, state.combo > 0, speedMultiplier, speedTier);
+
+                // Reset typed chars
+                enemy.typedChars = 0;
+                updateEnemyWord(enemy);
+            }
+        }
+
+        function breakCombo() {
+            if (state.combo > 0) {
+                // Visual feedback for combo break
+                const comboEl = document.getElementById('comboDisplay');
+                if (comboEl) {
+                    comboEl.classList.add('combo-break');
+                    setTimeout(() => comboEl.classList.remove('combo-break'), 500);
+                }
+            }
+
+            state.combo = 0;
+            state.lastKillTime = null;
+            if (state.comboTimeoutId) {
+                clearTimeout(state.comboTimeoutId);
+                state.comboTimeoutId = null;
+            }
+            updateHUD();
+        }
+
+        function showComboAnnouncement() {
+            const combo = state.combo;
+            let text = '';
+            let color = '';
+
+            if (combo === 2) {
+                text = 'DOUBLE KILL!';
+                color = '#00ffff';
+            } else if (combo === 3) {
+                text = 'TRIPLE KILL!';
+                color = '#ffaa00';
+            } else if (combo === 4) {
+                text = 'QUAD KILL!';
+                color = '#ff0080';
+            } else if (combo === 5) {
+                text = 'RAMPAGE!';
+                color = '#8a2be2';
+            } else if (combo >= 6) {
+                text = 'UNSTOPPABLE!';
+                color = '#ff0080';
+            }
+
+            if (text) {
+                const announcement = document.getElementById('comboAnnouncement');
+                announcement.textContent = text;
+                announcement.style.color = color;
+                announcement.classList.remove('show');
+                void announcement.offsetWidth; // Force reflow
+                announcement.classList.add('show');
+
+                setTimeout(() => {
+                    announcement.classList.remove('show');
+                }, 1500);
+            }
+        }
+
+        function showSpeedAnnouncement(tier, wpm) {
+            let text = '';
+            let color = '';
+
+            if (tier === 'godlike') {
+                text = `GODLIKE SPEED! ${wpm} WPM`;
+                color = '#ffaa00';
+            } else if (tier === 'lightning') {
+                text = `LIGHTNING FAST! ${wpm} WPM`;
+                color = '#ffaa00';
+            }
+
+            if (text) {
+                const announcement = document.getElementById('speedAnnouncement');
+                if (announcement) {
+                    announcement.textContent = text;
+                    announcement.style.color = color;
+                    announcement.classList.remove('show');
+                    void announcement.offsetWidth; // Force reflow
+                    announcement.classList.add('show');
+
+                    setTimeout(() => {
+                        announcement.classList.remove('show');
+                    }, 1200);
+                }
+            }
+        }
+
+        function spawnDamageNumber(x, y, damage, isPerfect = false, hasCombo = false, speedMultiplier = 1, speedTier = '') {
+            const damageEl = document.createElement('div');
+            damageEl.className = 'damage-number';
+
+            // Add class based on type (prioritize speed > combo > perfect)
+            if (speedTier === 'godlike' || speedTier === 'lightning') {
+                damageEl.classList.add('speed-bonus');
+            } else if (hasCombo && state.combo >= 3) {
+                damageEl.classList.add('combo');
+            } else if (isPerfect) {
+                damageEl.classList.add('perfect');
+            }
+
+            // Show damage amount with multipliers
+            const comboMultiplier = state.combo > 0 ? Math.min(1 + (state.combo - 1) * 0.5, 5) : 1;
+            const totalMultiplier = comboMultiplier * speedMultiplier;
+            const displayDamage = Math.round(damage * totalMultiplier);
+
+            // Display text with speed indicator
+            let text = '-' + displayDamage;
+            if (speedMultiplier > 1) {
+                text += ` ⚡${speedMultiplier.toFixed(1)}x`;
+            }
+            damageEl.textContent = text;
+
+            // Position it at enemy location
+            damageEl.style.left = x + 'px';
+            damageEl.style.top = y + 'px';
+
+            // Add to arena
+            elements.arena.appendChild(damageEl);
+
+            // Remove after animation
+            setTimeout(() => {
+                damageEl.remove();
+            }, 1000);
+        }
+
+        function damageBase(enemy) {
+            state.baseHP -= 10;
+            updateHUD();
+
+            // SCREEN SHAKE
+            const gameContainer = document.querySelector('.game-container');
+            gameContainer.classList.add('shake');
+            setTimeout(() => gameContainer.classList.remove('shake'), 500);
+
+            // Flash effect from bottom
+            const flash = document.createElement('div');
+            flash.className = 'base-hit-flash';
+            document.body.appendChild(flash);
+            setTimeout(() => flash.remove(), 400);
+
+            // Remove enemy immediately
+            enemy.element.remove();
+            state.enemies = state.enemies.filter(e => e.id !== enemy.id);
+
+            // Check game over
+            if (state.baseHP <= 0) {
+                gameOver();
+            }
+        }
+
+        function waveComplete() {
+            state.isPaused = true;
+
+            // Show shop
+            elements.shop.classList.remove('hidden');
+            updateShopPrices();
+
+            // Initialize shop selection
+            state.shopSelectedIndex = 0;
+            updateShopSelection();
+        }
+
+        function updateShopSelection() {
+            // Remove all selected classes
+            const items = document.querySelectorAll('.shop-item');
+            const continueBtn = document.querySelector('.continue-btn');
+
+            items.forEach(item => item.classList.remove('selected'));
+            continueBtn.classList.remove('selected');
+
+            // Add selected to current index
+            if (state.shopSelectedIndex < items.length) {
+                // Selecting an upgrade
+                items[state.shopSelectedIndex].classList.add('selected');
+            } else {
+                // Selecting continue button
+                continueBtn.classList.add('selected');
+            }
+        }
+
+        function handleShopKeyboard(e) {
+            // Only handle if shop is open
+            if (elements.shop.classList.contains('hidden')) return;
+
+            const key = e.key;
+            const items = document.querySelectorAll('.shop-item');
+            const continueBtn = document.querySelector('.continue-btn');
+            const totalItems = items.length + 1; // +1 for continue button
+
+            // Number keys 1-4 for direct selection
+            if (key >= '1' && key <= '4') {
+                const index = parseInt(key) - 1;
+                if (index < items.length) {
+                    state.shopSelectedIndex = index;
+                    updateShopSelection();
+                }
+                e.preventDefault();
+            }
+            // Tab to navigate (including to continue button)
+            else if (key === 'Tab') {
+                state.shopSelectedIndex = (state.shopSelectedIndex + 1) % totalItems;
+                updateShopSelection();
+                e.preventDefault();
+            }
+            // Arrow keys for navigation
+            else if (key === 'ArrowDown') {
+                state.shopSelectedIndex = (state.shopSelectedIndex + 1) % totalItems;
+                updateShopSelection();
+                e.preventDefault();
+            }
+            else if (key === 'ArrowUp') {
+                state.shopSelectedIndex = (state.shopSelectedIndex - 1 + totalItems) % totalItems;
+                updateShopSelection();
+                e.preventDefault();
+            }
+            // Space to buy selected upgrade (only if on upgrade, not continue button)
+            else if (key === ' ') {
+                if (state.shopSelectedIndex < items.length) {
+                    const selectedItem = items[state.shopSelectedIndex];
+                    if (selectedItem) {
+                        const upgradeName = selectedItem.getAttribute('data-upgrade');
+                        buyUpgrade(upgradeName);
+                    }
+                }
+                e.preventDefault();
+            }
+            // Enter to buy upgrade OR continue to wave
+            else if (key === 'Enter') {
+                if (state.shopSelectedIndex < items.length) {
+                    // On an upgrade - buy it
+                    const selectedItem = items[state.shopSelectedIndex];
+                    if (selectedItem) {
+                        const upgradeName = selectedItem.getAttribute('data-upgrade');
+                        buyUpgrade(upgradeName);
+                    }
+                } else {
+                    // On continue button - go to next wave
+                    continueToNextWave();
+                }
+                e.preventDefault();
+            }
+        }
+
+        function continueToNextWave() {
+            elements.shop.classList.add('hidden');
+            state.isPaused = false;
+            state.wave++;
+
+            elements.inputField.focus();
+            startWave(state.wave);
+        }
+
+        function updateHUD() {
+            elements.baseHP.textContent = Math.max(0, state.baseHP);
+            elements.wave.textContent = state.wave;
+            elements.gold.textContent = state.gold;
+            elements.score.textContent = state.score;
+
+            // Update combo display
+            const comboMultiplier = state.combo > 0 ? Math.min(1 + (state.combo - 1) * 0.5, 5) : 1;
+            const comboEl = document.getElementById('combo');
+            if (comboEl) {
+                if (state.combo > 0) {
+                    comboEl.textContent = state.combo + 'x (' + comboMultiplier.toFixed(1) + 'x)';
+                } else {
+                    comboEl.textContent = '0x';
+                }
+            }
+        }
+
+        function updateShopPrices() {
+            const damagePrice = 50 + state.damageUpgrades * 25;
+            const slowPrice = 75 + state.slowUpgrades * 30;
+            const goldPrice = 60 + state.goldUpgrades * 20;
+
+            document.getElementById('damagePrice').textContent = damagePrice + 'g';
+            document.getElementById('slowPrice').textContent = slowPrice + 'g';
+            document.getElementById('goldPrice').textContent = goldPrice + 'g';
+        }
+
+        function buyUpgrade(type) {
+            let cost = 0;
+
+            if (type === 'damage') {
+                cost = 50 + state.damageUpgrades * 25;
+                if (state.gold >= cost) {
+                    state.gold -= cost;
+                    state.damageMultiplier += 0.2;
+                    state.damageUpgrades++;
+                }
+            } else if (type === 'slow') {
+                cost = 75 + state.slowUpgrades * 30;
+                if (state.gold >= cost) {
+                    state.gold -= cost;
+                    state.slowMultiplier *= 0.85;
+                    state.slowUpgrades++;
+                }
+            } else if (type === 'repair') {
+                cost = 40;
+                if (state.gold >= cost) {
+                    state.gold -= cost;
+                    state.baseHP = Math.min(state.maxBaseHP, state.baseHP + 30);
+                }
+            } else if (type === 'gold') {
+                cost = 60 + state.goldUpgrades * 20;
+                if (state.gold >= cost) {
+                    state.gold -= cost;
+                    state.goldMultiplier += 0.5;
+                    state.goldUpgrades++;
+                }
+            }
+
+            updateHUD();
+            updateShopPrices();
+        }
+
+        function gameOver() {
+            state.isPlaying = false;
+            cancelAnimationFrame(state.gameLoopId);
+
+            elements.finalWave.textContent = state.wave;
+            elements.finalScore.textContent = state.score;
+            elements.gameOver.classList.remove('hidden');
+        }
+
+        function restartGame() {
+            startGame();
+        }
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // EVENT LISTENERS
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+        document.getElementById('startBtn').addEventListener('click', () => {
+            startGame();
+        });
+        elements.inputField.addEventListener('input', handleInput);
+
+        // Shop keyboard navigation
+        document.addEventListener('keydown', handleShopKeyboard);
+
+        // Keep input focused
+        document.addEventListener('click', () => {
+            if (state.isPlaying && !state.isPaused) {
+                elements.inputField.focus();
+            }
+        });
+    </script>
+</body>
+</html>
