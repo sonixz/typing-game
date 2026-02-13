@@ -1,13 +1,15 @@
-# 🎮 Typing War
+# 🎮 Typing Lab
 
-A cyberpunk-themed typing defense game where you destroy enemies by typing their words before they reach your base.
+> A cyberpunk-themed typing defense game where you destroy enemies by typing their words before they reach your base.
 
-![Version](https://img.shields.io/badge/version-0.1.0-blue)
-![Status](https://img.shields.io/badge/status-alpha-orange)
+[![Version](https://img.shields.io/badge/version-0.2.0-blue)](https://github.com/sonixz/typing-game/releases)
+[![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
+[![Status](https://img.shields.io/badge/status-alpha-orange)]()
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](./CONTRIBUTING.md)
 
-## 🕹️ Game Features
+**[🎮 Play Now](https://typinglab.io)** | **[📖 Docs](./DEPLOY.md)** | **[🤝 Contributing](./CONTRIBUTING.md)**
 
-### Current Features (v0.1.0)
+## ✨ Features
 - **Wave-based gameplay**: Progressive difficulty with enemy waves
 - **3 Enemy types**: Normal, Fast, and Tank enemies
 - **Dynamic word difficulty**: Easy, Medium, Hard, and Boss word pools
@@ -23,8 +25,13 @@ A cyberpunk-themed typing defense game where you destroy enemies by typing their
 
 ## 🚀 Quick Start
 
-1. Open `typing-war.html` in your browser
-2. Start typing to play!
+### Play Online
+Visit **[typinglab.io](https://typinglab.io)** and start typing!
+
+### Run Locally
+1. Clone the repo: `git clone https://github.com/sonixz/typing-game.git`
+2. Open `index.html` in your browser
+3. Start typing!
 
 No build process, no dependencies. Pure vanilla HTML/CSS/JS.
 
@@ -66,9 +73,13 @@ No build process, no dependencies. Pure vanilla HTML/CSS/JS.
 
 ```
 typing-game/
-├── typing-war.html    # Main game (all-in-one file)
-├── words.json         # Word pools for all difficulties
-└── README.md          # This file
+├── index.html              # Main game (all-in-one file)
+├── words.json              # Word pools for all difficulties
+├── staticwebapp.config.json # Azure deployment config
+├── LICENSE                 # MIT License
+├── CONTRIBUTING.md         # Contribution guidelines
+├── DEPLOY.md              # Deployment guide
+└── README.md              # You are here
 ```
 
 ## 🎨 Design Philosophy
@@ -87,23 +98,42 @@ Cyberpunk aesthetic with:
 - Pure CSS3 (animations, clip-paths, shadows)
 - Vanilla JavaScript (no frameworks)
 
-## 📝 Version History
-
-### v0.1.0 - Initial Release
-- Core typing mechanics
-- Wave system with shop
-- Basic enemy types
-- Combo and speed multiplier systems
-- Cyberpunk UI/UX
-
 ## 🤝 Contributing
 
-This is a vibe coding project. Feel free to fork and add your own flavor!
+We welcome contributions! Whether it's:
+- 🐛 Bug fixes
+- ✨ New features
+- 🎨 Design improvements
+- 📝 Documentation
+- 🌍 Translations
+
+Check out our [**Contributing Guide**](./CONTRIBUTING.md) to get started.
 
 ## 📄 License
 
-MIT License - Do whatever you want with it!
+This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- Built with 💜 using 100% vibe coding
+- Powered by vanilla JavaScript (no frameworks!)
+- Deployed on Azure Static Web Apps
+- Typography: DM Sans font from Google Fonts
+
+## 📊 Stats
+
+- **Lines of Code**: ~2900+ (single file!)
+- **Word Pool**: 1000+ words across 4 difficulty tiers
+- **Dependencies**: 0 (pure vanilla)
+- **Frameworks**: 0 (just HTML/CSS/JS)
+
+## 🔗 Links
+
+- **Live Game**: [typinglab.io](https://typinglab.io)
+- **GitHub Repo**: [github.com/sonixz/typing-game](https://github.com/sonixz/typing-game)
+- **Issues**: [Report a bug or request a feature](https://github.com/sonixz/typing-game/issues)
+- **Author**: [@sonixz](https://github.com/sonixz)
 
 ---
 
-**Built with 💜 by vibe coding**
+**Made with ⚡ by [@sonixz](https://github.com/sonixz)** | **Star ⭐ this repo if you like it!**

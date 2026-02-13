@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to Typing War will be documented in this file.
+All notable changes to Typing Lab will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -12,7 +12,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Particle effects for enemy destruction
 - Power-ups system
 - Boss waves
-- Local leaderboard
+- Local leaderboard with persistence
+
+## [0.2.0] - 2026-02-12
+
+### Added
+- Footer navigation bar with external links
+  - GitHub repository link
+  - Leaderboards placeholder (coming soon)
+  - Author credit link
+- MIT License for open source release
+- CONTRIBUTING.md guide for contributors
+- Enhanced README with badges and better structure
+- Azure Static Web Apps deployment configuration
+- Development context documentation (.claude/context.md)
+- Deployment guides (DEPLOY.md, azure-static-webapp.md)
+
+### Changed
+- **BREAKING**: Renamed `typing-war.html` to `index.html` for cleaner URLs
+- Updated all documentation references to use index.html
+- Simplified Azure static web app configuration
+- Rebranded from "Typing War" to "Typing Lab"
+- Improved footer styling with cyberpunk animations
+
+### Fixed
+- Azure deployment configuration pointing to old filename
+- Root URL now properly serves index.html
+
+### Technical
+- Repository prepared for public release
+- CI/CD pipeline configured via GitHub Actions
+- Auto-deploy on push to main branch
 
 ## [0.1.0] - 2026-02-12
 
