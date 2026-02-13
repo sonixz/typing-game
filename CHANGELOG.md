@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Massively enriched word pool from 357 to 5,023 unique words
+  - Tech/gaming vocabulary (500+ terms): programming languages, frameworks, tools
+  - Common English words: 2000+ nouns, 1000+ verbs/adjectives
+  - Themed categories: science, space, nature, action words
+  - Distribution: 980 easy, 2,018 medium, 1,488 hard, 537 boss words
+- Python word generation scripts for reproducibility and future expansion
+
 ### Planned
 - Sound effects and music
 - Particle effects for enemy destruction
