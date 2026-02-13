@@ -1657,8 +1657,8 @@
 
                     wordsLoaded = true;
                     const selectedWords = Object.values(wordPools).flat().length;
-                    console.log(`✓ Selected ${selectedWords} words from pool of ${fullPoolSize}`);
-                    if (statusEl) statusEl.textContent = `✓ ${selectedWords} words loaded`;
+                    console.log(`✓ Selected ${selectedWords} random words from pool of ${fullPoolSize}`);
+                    if (statusEl) statusEl.textContent = `✓ ${selectedWords} random words loaded`;
                     if (statusEl) statusEl.style.color = '#00ffff';
                     return true;
                 } else {
@@ -1679,8 +1679,8 @@
                         wordPools = selectRandomWordPool(data);
 
                         const selectedWords = Object.values(wordPools).flat().length;
-                        console.log(`✓ Selected ${selectedWords} words from pool of ${fullPoolSize}`);
-                        if (statusEl) statusEl.textContent = `✓ ${selectedWords} words loaded`;
+                        console.log(`✓ Selected ${selectedWords} random words from pool of ${fullPoolSize}`);
+                        if (statusEl) statusEl.textContent = `✓ ${selectedWords} random words loaded`;
                         if (statusEl) statusEl.style.color = '#00ffff';
                         wordsLoaded = true;
                         return true;
