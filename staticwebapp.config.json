@@ -1,0 +1,26 @@
+{
+  "routes": [
+    {
+      "route": "/",
+      "redirect": "/typing-war.html",
+      "statusCode": 301
+    }
+  ],
+  "navigationFallback": {
+    "rewrite": "/typing-war.html",
+    "exclude": ["/words.json"]
+  },
+  "mimeTypes": {
+    ".json": "application/json",
+    ".html": "text/html"
+  },
+  "globalHeaders": {
+    "cache-control": "public, max-age=3600"
+  },
+  "responseOverrides": {
+    "404": {
+      "rewrite": "/typing-war.html",
+      "statusCode": 200
+    }
+  }
+}
