@@ -1787,13 +1787,13 @@
                 type = 'tank';
                 word = wordPools.hard[Math.floor(Math.random() * wordPools.hard.length)];
                 hp = 3;
-                speed = 0.3;
+                speed = 0.45;
                 goldValue = 30;
             } else if (waveNum >= 3 && rand < 0.4) {
                 type = 'fast';
                 word = wordPools.medium[Math.floor(Math.random() * wordPools.medium.length)];
                 hp = 1;
-                speed = 0.8;
+                speed = 1.1;
                 goldValue = 15;
             } else {
                 type = 'normal';
@@ -1803,7 +1803,7 @@
                     word = wordPools.easy[Math.floor(Math.random() * wordPools.easy.length)];
                 }
                 hp = 1;
-                speed = 0.5;
+                speed = 0.7;
                 goldValue = 10;
             }
 
@@ -1818,7 +1818,7 @@
                 maxHp: hp,
                 speed: speed,
                 goldValue: goldValue,
-                y: 0,
+                y: -100,
                 x: Math.random() * (window.innerWidth - 100) + 50,
                 element: null,
                 typedChars: 0
@@ -1856,9 +1856,9 @@
                 enemy.y += enemy.speed;
                 enemy.element.style.top = enemy.y + 'px';
 
-                // Check if reached base
+                // Check if reached base (stop further from base to show full word)
                 const arenaHeight = elements.arena.clientHeight;
-                if (enemy.y >= arenaHeight - 80) {
+                if (enemy.y >= arenaHeight - 150) {
                     damageBase(enemy);
                 }
             });
