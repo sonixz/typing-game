@@ -16,3 +16,8 @@ npm-debug.log*
 # Temporary files
 *.tmp
 .cache/
+
+# Build scripts (not needed for deployment)
+*.py
+__pycache__/
+*.pyc
